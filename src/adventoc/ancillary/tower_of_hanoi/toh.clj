@@ -22,6 +22,9 @@
         (update-in [2] conj disk-to-move))
     state))
 
+(defn print-state [state]
+  (println (mapv vec state)))
+
 (defn toh-recursive [state, n]
   (if (zero? n)
     (do
