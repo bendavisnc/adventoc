@@ -1,20 +1,26 @@
-(ns adventoc.ancillary.tower-of-hanoi.toh)
+(ns adventoc.ancillary.tower-of-hanoi.toh
+  (:require [dev.nu.morse :as morse]))
 
 (defn towers [disks towers]
-  (let [tower-zero (vec (range disks))
-        empty-tower (vec (repeat disks nil))
+  (let [tower-zero (vec (range (dec disks) -1 -1))
+        empty-tower []
         initial (vec (cons tower-zero (repeat (dec towers) empty-tower)))]
     initial))
 
 (defn toh-recursive [state, bar-one-index, bar-two-index, bar-three-index, n]
   (if (zero? n)
-    state
+    (do 
+      (println state)
+      (morse/inspect state)
+      state)
     ;; else
     (let [state-next (toh-recursive state, bar-one-index, bar-three-index, bar-two-index, (dec n))
-          disk-to-move (get-in state-next [bar-one-index (dec n)])
+          disk-to-move (-> state-next (get bar-one-index) peek)
+          tower-one-after-move (-> state-next (get bar-one-index) pop)
+          tower-three-after-move (-> state-next (get bar-three-index) (conj disk-to-move))
           state-moved (-> state-next
-                          (assoc-in [bar-one-index (dec n)] nil)
-                          (assoc-in [bar-three-index (dec n)] disk-to-move))]
+                          (assoc bar-one-index tower-one-after-move)
+                          (assoc bar-three-index tower-three-after-move))]
       (toh-recursive state-moved, bar-two-index, bar-one-index, bar-three-index, (dec n)))))
 
 (defn toh [number-of-disks, number-of-towers]
@@ -23,6 +29,16 @@
 
 (defn -main [& _]
   (println (toh 4 3)))
+
+(comment (morse/launch-in-proc))
+(comment (-main))
+
+(comment (let [disk [0, 1, 2, 3 4]]
+           (println (pop disk))))
+(comment (println (range 4 -1 -1)))
+
+(comment (conj [] 1))
+
 
 ;; https://www.reddit.com/r/learnprogramming/comments/lywzqh/at_what_point_of_learning_programming_am_i/
     ;; void f(int[] bar1, int[] bar2, int[] bar3, int n)

@@ -5,7 +5,7 @@ dev:
 	find . -iname *.clj | entr make run
 
 run: format
-	clj -M --main ${MAIN}
+	clj -M:dev --main ${MAIN}
 
 format:
 	@echo "Formatting clj."
