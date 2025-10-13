@@ -3,49 +3,33 @@
    [dev.nu.morse :as morse]))
 
 (defn towers [disks towers]
-  (let [tower-zero (into clojure.lang.PersistentQueue/EMPTY (range (dec disks) -1 -1))
-        empty-tower clojure.lang.PersistentQueue/EMPTY
+  (let [tower-zero (vec (range (dec disks) -1 -1))
+        empty-tower []
         initial (vec (cons tower-zero (repeat (dec towers) empty-tower)))]
     initial))
 
-(defn switch-towers [state, a-index, b-index]
-  (let [a (get state a-index)
-        b (get state b-index)]
-    (-> state
-        (assoc a-index b)
-        (assoc b-index a))))
-
-(defn move-disk [state]
-  (if-let [disk-to-move (-> state first peek)]
-    (-> state
-        (update-in [0] pop)
-        (update-in [2] conj disk-to-move))
-    state))
-
-(defn print-state [state]
-  (println (mapv vec state)))
-
-(defn toh-recursive [state, n]
+(defn toh-recursive [state, bar-one-index, bar-two-index, bar-three-index, n]
   (if (zero? n)
     (do
-    ;;   (println state)
-      (morse/inspect [n state])
+      (println state)
+      ;;   (morse/inspect state)
       state)
     ;; else
-    (let [state-next (toh-recursive (switch-towers state 0 1) (dec n))
-          state-moved (move-disk state-next)]
-      (toh-recursive (switch-towers state-moved 0 1) (dec n)))))
+    (let [state-next (toh-recursive state, bar-one-index, bar-three-index, bar-two-index, (dec n))
+          disk-to-move (-> state-next (get bar-one-index) peek)
+          tower-one-after-move (-> state-next (get bar-one-index) pop)
+          tower-three-after-move (-> state-next (get bar-three-index) (conj disk-to-move))
+          state-moved (-> state-next
+                          (assoc bar-one-index tower-one-after-move)
+                          (assoc bar-three-index tower-three-after-move))]
+      (toh-recursive state-moved, bar-two-index, bar-one-index, bar-three-index, (dec n)))))
 
 (defn toh [number-of-disks, number-of-towers]
   (let [state (towers number-of-disks number-of-towers)]
-    (toh-recursive state number-of-disks)))
+    (toh-recursive state 0 1 (dec number-of-towers) number-of-disks)))
 
 (defn -main [& _]
-  (let [solved (mapv vec (toh 4 3))]
-    (println "Final state: " solved)
-    (assert (= [] (first solved)))
-    (assert (= [] (second solved)))
-    (assert (= [3, 2, 1, 0] (nth solved 2)))))
+  (println (toh 4 3)))
 
 (comment (morse/launch-in-proc))
 (comment (-main))
