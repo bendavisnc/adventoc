@@ -8,25 +8,28 @@
         initial (vec (cons tower-zero (repeat (dec towers) empty-tower)))]
     initial))
 
-(defn toh-recursive [state, bar-one-index, bar-two-index, bar-three-index, n]
+(defn toh-moves
+  "Returns a lazy sequence of [from to] moves to solve Hanoi for n disks."
+  [n from to aux]
   (if (zero? n)
-    (do
-      (println state)
-      ;;   (morse/inspect state)
-      state)
-    ;; else
-    (let [state-next (toh-recursive state, bar-one-index, bar-three-index, bar-two-index, (dec n))
-          disk-to-move (-> state-next (get bar-one-index) peek)
-          tower-one-after-move (-> state-next (get bar-one-index) pop)
-          tower-three-after-move (-> state-next (get bar-three-index) (conj disk-to-move))
-          state-moved (-> state-next
-                          (assoc bar-one-index tower-one-after-move)
-                          (assoc bar-three-index tower-three-after-move))]
-      (toh-recursive state-moved, bar-two-index, bar-one-index, bar-three-index, (dec n)))))
+    []
+    (concat
+      ;; move n-1 disks from source → auxiliary
+      (toh-moves (dec n) from aux to)
+      ;; move nth disk from source → destination
+      [[from to]]
+      ;; move n-1 disks from auxiliary → destination
+      (toh-moves (dec n) aux to from))))
+
+(defn apply-move [state [from to]]
+  (let [disk (peek (state from))]
+    (-> state
+        (assoc from (pop (state from)))
+        (assoc to   (conj (state to) disk)))))
 
 (defn toh [number-of-disks, number-of-towers]
   (let [state (towers number-of-disks number-of-towers)]
-    (toh-recursive state 0 1 (dec number-of-towers) number-of-disks)))
+    (reduce apply-move state (toh-moves number-of-disks 0 2 1))))
 
 (defn -main [& _]
   (println (toh 4 3)))
