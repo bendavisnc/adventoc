@@ -1,5 +1,5 @@
 # MAIN=adventoc.twentytwentyone.twentythree.amphipod
-MAIN=adventoc.ancillary.tower-of-hanoi.toh
+MAIN ?= adventoc.ancillary.tower-of-hanoi.toh
 
 dev: 
 	find . -iname *.clj | entr make run
