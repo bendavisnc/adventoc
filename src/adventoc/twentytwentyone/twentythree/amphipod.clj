@@ -22,8 +22,24 @@
     e
     (throw (ex-info (str "Unknown amphipod energy for : " amphipod) {:amphipod amphipod}))))
 
+(defn positions->moves [positions]
+  (let [coords (for [row-index (range (count positions))
+                     col-index (range (count (positions row-index)))]
+                 [row-index, col-index])]
+    (reduce (fn [acc, [x, y]]
+              (let [amphipod (get-in positions [x y])]
+                (if amphipod
+                  (update-in acc [amphipod :moves] conj [x y])
+                  acc)))
+            amphipods
+            coords)))
+
 (defn -main [& _]
-  (println (amphipod-energy ::C1)))
+  (let [board [[nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil]
+               [nil, nil, ::B0, ::C0, ::B1, ::D1, nil, nil, nil, nil, nil]
+               [nil, nil, ::A0, ::D0, ::C1, ::A1, nil, nil, nil, nil, nil]]
+        amphipods-start (positions->moves board)]
+    (println amphipods-start)))
 
 (comment (amphipod-energys (keyword (str (first (name ::B1))))))
 
