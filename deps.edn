@@ -1,7 +1,10 @@
-{:deps {}
+{:deps {shams/priority-queue {:mvn/version "0.1.2"}}
  :paths ["src"]
  :aliases {:dev {:jvm-opts ["-Djdk.attach.allowAttachSelf=true"]
                  :extra-deps {io.github.clojure/data.alpha.replicant-server {:git/tag "v2023.05.02.01" :git/sha "947d8a8"}
-                              io.github.nubank/morse {:git/tag "v2023.04.30.01" :git/sha "d99b09c"}}}}}
-
- 
+                              io.github.nubank/morse {:git/tag "v2023.04.30.01" :git/sha "d99b09c"}}}
+           :test
+           {:extra-paths ["test"]
+            :extra-deps {io.github.cognitect-labs/test-runner
+                         {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
+            :main-opts ["-m" "cognitect.test-runner" "-d" "test"]}}}
