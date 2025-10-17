@@ -24,10 +24,10 @@
                           :C [nil, nil]
                           :D [nil, nil]}})
 
-(def positions (concat (map #(vector :hallway %) (range 11))
-                       (for [room [:A :B :C :D]
-                             depth [0 1]]
-                         [:room room depth])))
+(def moves-every (concat (map #(vector :hallway %) (range 11))
+                         (for [room [:A :B :C :D]
+                               depth [0 1]]
+                           [:room room depth])))
 
 (defn energy [amphipod]
   (if-let [e (some-> amphipod name first str keyword energys)]
@@ -37,39 +37,7 @@
 (defn can-move? [burrow amphipod position]
   true)
 
-(defn moves [burrow]
-  (for [amphipod amphipods
-        position positions
-        :when (can-move? burrow amphipod position)]
-    [amphipod position]))
-
-(defn goal? [step]
-  (let [burrow (:burrow step)]
-    (and (= #{:A0 :A1} (set (get-in burrow [:room :A])))
-         (= #{:B0 :B1} (set (get-in burrow [:room :B])))
-         (= #{:C0 :C1} (set (get-in burrow [:room :C])))
-         (= #{:D0 :D1} (set (get-in burrow [:room :D])))
-         (= #{nil} (set (get burrow :hallway))))))
-
-(defn weight [steps]
-  (reduce + (map :acc-energy steps)))
-
-(defn amphipod-solve [burrow]
-  ;; (let [step-zero [{:burrow burrow
-  ;;                   :acc-energy 0}]
-  ;;       queue (conj (pq/priority-queue weight)
-  ;;                   step-zero)]
-  ;;   (loop [q queue]
-  ;;     (let [steps (steps-next (peek q))]
-  ;;       (if-let [step (some goal? steps)]
-  ;;         step
-  ;;         (recur (reduce (fn [acc, s]
-  ;;                          (conj acc s))
-  ;;                        (pop q)
-  ;;                        steps)))))))
-  nil)
-
-(defn journey->map [journey]
+(defn journey->burrow [journey]
   (let [moves (-> journey :moves rseq)]
     (reduce (fn [acc, amphipod]
               (let [last-move (some (fn [move]
@@ -80,6 +48,15 @@
                 (assoc-in acc move-position amphipod)))
             burrow-empty
             amphipods)))
+
+(defn goal [journey]
+  (let [burrow (journey->burrow journey)]
+    (when (and (= #{:A0 :A1} (set (get-in burrow [:room :A])))
+               (= #{:B0 :B1} (set (get-in burrow [:room :B])))
+               (= #{:C0 :C1} (set (get-in burrow [:room :C])))
+               (= #{:D0 :D1} (set (get-in burrow [:room :D])))
+               (= #{nil} (set (get burrow :hallway))))
+      journey)))
 
 (defn distance [from, to]
   (case [(first from) (first to)]
@@ -100,20 +77,41 @@
   (* (energy amphipod)
      (distance from to)))
 
+(defn weight [journey]
+  (* -1 (:accumulated-cost journey)))
+
 (defn move-most-recent [amphipod moves]
   (some (fn [move]
           (when (= amphipod (first move))
             (rest move)))
         (rseq moves)))
 
-(defn move-applied [step [amphipod move-to :as move]]
-  (-> step
-      (update :moves conj move)
+(defn move-applied [journey {:keys [amphipod move]}]
+  (-> journey
+      (update :moves conj [amphipod move])
       (update :accumulated-cost
               +
               (cost amphipod
-                    (move-most-recent amphipod (:moves step))
-                    move-to))))
+                    (move-most-recent amphipod (:moves journey))
+                    move))))
+
+(defn journeys-afresh [journey]
+  (for [amphipod amphipods
+        move moves-every
+        :when (can-move? journey amphipod move)]
+    (move-applied journey {:amphipod amphipod
+                           :move move})))
+
+(defn amphipod-solve [journey]
+  (let [queue (conj (pq/priority-queue weight)
+                    journey)]
+    (loop [q queue]
+      (if-let [journey-success (some goal (peek q))]
+        journey-success
+        (recur (reduce (fn [acc, s]
+                         (conj acc s))
+                       (pop q)
+                       (journeys-afresh (peek q))))))))
 
 (defn -main [& _]
   (let [burrow-journey-start {:accumulated-cost 0

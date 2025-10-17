@@ -15,4 +15,4 @@ test: format
 
 format:
 	@echo "Formatting clj."
-	standard-clj fix src
+	standard-clj fix src test deps.edn
