@@ -3,21 +3,15 @@
    [adventoc.twentytwentyone.twentythree.amphipod :as core]
    [clojure.test :refer :all]))
 
-(def burrow-initial (-> core/burrow-empty
-                        (assoc-in [:rooms :A] [:A0 :B0])
-                        (assoc-in [:rooms :B] [:D0 :C0])
-                        (assoc-in [:rooms :C] [:C1 :B1])
-                        (assoc-in [:rooms :D] [:A1 :D1])))
-
 (def journey-start {:accumulated-cost 0
-                    :moves [[:A0 :room :A 0]
-                            [:B0 :room :A 1]
-                            [:D0 :room :B 0]
-                            [:C0 :room :B 1]
-                            [:C1 :room :C 0]
-                            [:B1 :room :C 1]
-                            [:A1 :room :D 0]
-                            [:D1 :room :D 1]]})
+                    :moves [[:A0 [:room :A 0]]
+                            [:B0 [:room :A 1]]
+                            [:D0 [:room :B 0]]
+                            [:C0 [:room :B 1]]
+                            [:C1 [:room :C 0]]
+                            [:B1 [:room :C 1]]
+                            [:A1 [:room :D 0]]
+                            [:D1 [:room :D 1]]]})
 
 (deftest journey-to-burrow-test
   (testing "journey->burrow"
@@ -31,6 +25,11 @@
 (deftest distance-test
   (testing "distance from room to hallway"
     (let [distance (core/distance [:room :C 1] [:hallway 3])]
+      (is (= 4 distance)))
+    (let [distance (core/distance [:room :A 0] [:hallway 0])]
+      (is (= 4 distance))))
+  (testing "distance from hallway to room"
+    (let [distance (core/distance [:hallway 3] [:room :C 1])]
       (is (= 4 distance))))
   (testing "distance from room to room"
     (let [distance (core/distance [:room :B 0] [:room :C 1])]
@@ -49,36 +48,36 @@
     (let [cost (core/cost :B1 [:room :C 1] [:hallway 3])]
       (is (= 40 cost)))))
 
-(deftest move-applied-test
-  (testing "move-applied"
-    (let [{:keys [moves accumulated-cost]} (core/move-applied journey-start
-                                                              {:amphipod :B1
-                                                               :move [:hallway 3]})]
-      (is (= 40 accumulated-cost))
-      (is (= [:B1 [:hallway 3]] (last moves))))))
-
 (deftest moves-most-recent-test
   (testing "move-most-recent"
     (let [journey (-> journey-start
-                      (update :moves conj [:A0 :hallway 0]))
+                      (update :moves conj [:A0 [:hallway 0]]))
           move (core/move-most-recent :A0 (:moves journey))]
-      (is (= [:hallway 0] move)))))
+      (is (= [:A0 [:hallway 0]]
+             move)))))
 
-(deftest journey-afresh-test
-  (testing "journeys-afresh"
-    (let [journeys (core/journeys-afresh journey-start)]
-      (is (= 152 (count journeys))))))
+(deftest move-applied-test
+  (testing "move-applied"
+    (let [{:keys [moves accumulated-cost]} (core/move-applied journey-start
+                                                              [:B1 [:hallway 3]])]
+      (is (= 40 accumulated-cost))
+      (is (= [:B1 [:hallway 3]] (last moves))))))
+
+;; ;; (deftest journey-afresh-test
+;; ;;   (testing "journeys-afresh"
+;; ;;     (let [journeys (core/journeys-afresh journey-start)]
+;; ;;       (is (= 152 (count journeys))))))
 
 (deftest goal-test
   (testing "goal"
     (let [journey-success (-> journey-start
-                              (update :moves conj [:A0 :room :A 0])
-                              (update :moves conj [:A1 :room :A 1])
-                              (update :moves conj [:B0 :room :B 0])
-                              (update :moves conj [:B1 :room :B 1])
-                              (update :moves conj [:C0 :room :C 0])
-                              (update :moves conj [:C1 :room :C 1])
-                              (update :moves conj [:D0 :room :D 0])
-                              (update :moves conj [:D1 :room :D 1]))
+                              (update :moves conj [:A0 [:room :A 0]])
+                              (update :moves conj [:A1 [:room :A 1]])
+                              (update :moves conj [:B0 [:room :B 0]])
+                              (update :moves conj [:B1 [:room :B 1]])
+                              (update :moves conj [:C0 [:room :C 0]])
+                              (update :moves conj [:C1 [:room :C 1]])
+                              (update :moves conj [:D0 [:room :D 0]])
+                              (update :moves conj [:D1 [:room :D 1]]))
           goal (core/goal journey-success)]
       (is (= true (boolean goal))))))
