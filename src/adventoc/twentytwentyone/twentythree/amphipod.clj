@@ -29,6 +29,12 @@
                                depth [0 1]]
                            [:room room depth])))
 
+(def room-position
+  {:A 3
+   :B 5
+   :C 7
+   :D 9})
+
 (defn energy [amphipod]
   (if-let [e (some-> amphipod name first str keyword energys)]
     e
@@ -63,14 +69,20 @@
     [:room :hallway]
     (let [hallway-index (second to)
           [_ room, room-index] from
-          back-room (if (zero? room-index) 1 0)
-          room-position (case room
-                          :A 3
-                          :B 5
-                          :C 7
-                          :D 9)]
-      (+ (Math/abs (- hallway-index room-position))
+          back-room (if (zero? room-index) 1 0)]
+      (+ (Math/abs (- hallway-index (room room-position)))
          back-room))
+    [:room :room]
+    (let [[_ room-from, room-from-index] from
+          [_ room-to, room-to-index] to]
+      (cond (= room-from room-to)
+            (Math/abs (- room-from-index room-to-index))
+            :else
+            (+ (Math/abs (- (+ (room-from room-position))
+                            (+ (room-to room-position))))
+              room-from-index
+              room-to-index
+              2)))
     (throw (ex-info (str "Unknown distance for from " from " to " to) {:from from :to to}))))
 
 (defn cost [amphipod from, to]

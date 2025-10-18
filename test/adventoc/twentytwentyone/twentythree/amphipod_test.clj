@@ -29,9 +29,15 @@
            (core/journey->burrow journey-start)))))
 
 (deftest distance-test
-  (testing "distance"
+  (testing "distance from room to hallway"
     (let [distance (core/distance [:room :C 1] [:hallway 3])]
-      (is (= 4 distance)))))
+      (is (= 4 distance))))
+  (testing "distance from room to room"
+    (let [distance (core/distance [:room :B 0] [:room :C 1])]
+      (is (= 5 distance))))
+  (testing "distance from room to same room"
+    (let [distance (core/distance [:room :C 0] [:room :C 1])]
+      (is (= 1 distance)))))
 
 (deftest energy-test
   (testing "energy"
@@ -50,6 +56,18 @@
                                                                :move [:hallway 3]})]
       (is (= 40 accumulated-cost))
       (is (= [:B1 [:hallway 3]] (last moves))))))
+
+(deftest moves-most-recent-test
+  (testing "move-most-recent"
+    (let [journey (-> journey-start
+                      (update :moves conj [:A0 :hallway 0]))
+          move (core/move-most-recent :A0 (:moves journey))]
+      (is (= [:hallway 0] move)))))
+
+(deftest journey-afresh-test
+  (testing "journeys-afresh"
+    (let [journeys (core/journeys-afresh journey-start)]
+      (is (= 152 (count journeys))))))
 
 (deftest goal-test
   (testing "goal"
