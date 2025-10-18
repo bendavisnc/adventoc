@@ -24,10 +24,10 @@
                           :C [nil, nil]
                           :D [nil, nil]}})
 
-(def moves-every (concat (map #(vector :hallway %) (range 11))
-                         (for [room [:A :B :C :D]
-                               depth [0 1]]
-                           [:room room depth])))
+(def move-placements (concat (map #(vector :hallway %) (range 11))
+                       (for [room [:A :B :C :D]
+                             depth [0 1]]
+                         [:room room depth])))
 
 (def room-position
   {:A 3
@@ -125,10 +125,11 @@
 
 (defn journeys-afresh [journey]
   (for [amphipod amphipods
-        move moves-every
-        :when (can-move? journey amphipod move)]
-    (move-applied journey {:amphipod amphipod
-                           :move move})))
+        move-placement move-placements
+        :when (can-move? journey amphipod move-placement)]
+    (move-applied journey
+                  [amphipod
+                   move-placement])))
 
 (defn amphipod-solve [journey]
   (let [queue (conj (pq/priority-queue weight)

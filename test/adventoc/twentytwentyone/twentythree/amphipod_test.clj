@@ -63,10 +63,10 @@
       (is (= 40 accumulated-cost))
       (is (= [:B1 [:hallway 3]] (last moves))))))
 
-;; ;; (deftest journey-afresh-test
-;; ;;   (testing "journeys-afresh"
-;; ;;     (let [journeys (core/journeys-afresh journey-start)]
-;; ;;       (is (= 152 (count journeys))))))
+(deftest journey-afresh-test
+  (testing "journeys-afresh"
+    (let [journeys (core/journeys-afresh journey-start)]
+      (is (= 152 (count journeys))))))
 
 (deftest goal-test
   (testing "goal"
