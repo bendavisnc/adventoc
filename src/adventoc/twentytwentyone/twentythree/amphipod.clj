@@ -35,6 +35,38 @@
    :C 7
    :D 9})
 
+;; #############
+;; #...........#
+;; ###B#C#B#D###
+;;   #A#D#C#A#
+;;   #########
+
+(defn burrow->str [burrow]
+  (format "#############
+#%s%s%s%s%s%s%s%s%s%s%s#
+###%s#%s#%s#%s###
+  #%s#%s#%s#%s#
+  #########"
+          (if-let [h0 (get-in burrow [:hallway 0])] (first (name h0)) ".")
+          (if-let [h1 (get-in burrow [:hallway 1])] (first (name h1)) ".")
+          (if-let [h2 (get-in burrow [:hallway 2])] (first (name h2)) ".")
+          (if-let [h3 (get-in burrow [:hallway 3])] (first (name h3)) ".")
+          (if-let [h4 (get-in burrow [:hallway 4])] (first (name h4)) ".")
+          (if-let [h5 (get-in burrow [:hallway 5])] (first (name h5)) ".")
+          (if-let [h6 (get-in burrow [:hallway 6])] (first (name h6)) ".")
+          (if-let [h7 (get-in burrow [:hallway 7])] (first (name h7)) ".")
+          (if-let [h8 (get-in burrow [:hallway 8])] (first (name h8)) ".")
+          (if-let [h9 (get-in burrow [:hallway 9])] (first (name h9)) ".")
+          (if-let [h10 (get-in burrow [:hallway 10])] (first (name h10)) ".")
+          (if-let [a0 (get-in burrow [:room :A 0])] (first (name a0)) ".")
+          (if-let [b0 (get-in burrow [:room :B 0])] (first (name b0)) ".")
+          (if-let [c0 (get-in burrow [:room :C 0])] (first (name c0)) ".")
+          (if-let [d0 (get-in burrow [:room :D 0])] (first (name d0)) ".")
+          (if-let [a1 (get-in burrow [:room :A 1])] (first (name a1)) ".")
+          (if-let [b1 (get-in burrow [:room :B 1])] (first (name b1)) ".")
+          (if-let [c1 (get-in burrow [:room :C 1])] (first (name c1)) ".")
+          (if-let [d1 (get-in burrow [:room :D 1])] (first (name d1)) ".")))
+
 (defn energy [amphipod]
   (if-let [e (some-> amphipod name first str keyword energys)]
     e
@@ -61,6 +93,7 @@
                    (:accumulated-cost journey)
                    (count (:moves journey))))
   (let [burrow (journey->burrow journey)]
+    (print (burrow->str burrow))
     (when (and (= #{:A0 :A1} (set (get-in burrow [:room :A])))
                (= #{:B0 :B1} (set (get-in burrow [:room :B])))
                (= #{:C0 :C1} (set (get-in burrow [:room :C])))
@@ -69,8 +102,6 @@
       journey)))
 
 (defn distance [from, to]
-  (when-not (#{:room :hallway} (first from))
-    (assert false (str "Invalid (also) `from` position: " from)))
   (assert (#{:room :hallway} (first from)) (str "Invalid `from` position: " from))
   (assert (#{:room :hallway} (first to)) (str "Invalid `to` position: " to))
   (case [(first from) (first to)]
@@ -86,6 +117,10 @@
           back-room (if (zero? room-index) 1 0)]
       (+ (Math/abs (- hallway-index (room room-position)))
          back-room))
+    [:hallway :hallway]
+    (let [hallway-from-index (second from)
+          hallway-to-index (second to)]
+      (Math/abs (- hallway-from-index hallway-to-index)))
     [:room :room]
     (let [[_ room-from, room-from-index] from
           [_ room-to, room-to-index] to]
