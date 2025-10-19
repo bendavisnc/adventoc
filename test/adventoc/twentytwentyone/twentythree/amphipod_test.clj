@@ -1,6 +1,7 @@
 (ns adventoc.twentytwentyone.twentythree.amphipod-test
   (:require
    [adventoc.twentytwentyone.twentythree.amphipod :as core]
+   [clojure.string :as string]
    [clojure.test :refer :all]))
 
 (def journey-start {:accumulated-cost 0
@@ -68,6 +69,17 @@
     (let [journeys (core/journeys-afresh journey-start)]
       (is (= 152 (count journeys))))))
 
+(deftest burrow->str
+  (testing "burrow->str"
+    (let [s (core/burrow->str (core/journey->burrow journey-start))]
+      (is (= (string/join "\n"
+               ["#############"
+                "#...........#"
+                "###A#D#C#A###"
+                "  #B#C#B#D#"
+                "  #########"])
+             s)))))
+
 (deftest goal-test
   (testing "goal"
     (let [journey-success (-> journey-start
@@ -79,5 +91,13 @@
                               (update :moves conj [:C1 [:room :C 1]])
                               (update :moves conj [:D0 [:room :D 0]])
                               (update :moves conj [:D1 [:room :D 1]]))
+          goal (core/goal journey-success)]
+      (is (= true (boolean goal)))))
+  (testing "goal (smaller burrow)"
+    (let [journey-success {:accumulated-cost 0
+                           :moves [[:A0 [:room :A 0]]
+                                   [:A1 [:room :A 1]]
+                                   [:B0 [:room :B 0]]
+                                   [:B1 [:room :B 1]]]}
           goal (core/goal journey-success)]
       (is (= true (boolean goal))))))

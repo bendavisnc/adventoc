@@ -35,37 +35,29 @@
    :C 7
    :D 9})
 
-;; #############
-;; #...........#
-;; ###B#C#B#D###
-;;   #A#D#C#A#
-;;   #########
-
 (defn burrow->str [burrow]
-  (format "#############
+  (let [a-or-period (fn [path]
+                      (or (some-> (get-in burrow path)
+                            name
+                            first)
+                          "."))]
+    (apply format
+      (flatten ["#############
 #%s%s%s%s%s%s%s%s%s%s%s#
 ###%s#%s#%s#%s###
   #%s#%s#%s#%s#
   #########"
-          (if-let [h0 (get-in burrow [:hallway 0])] (first (name h0)) ".")
-          (if-let [h1 (get-in burrow [:hallway 1])] (first (name h1)) ".")
-          (if-let [h2 (get-in burrow [:hallway 2])] (first (name h2)) ".")
-          (if-let [h3 (get-in burrow [:hallway 3])] (first (name h3)) ".")
-          (if-let [h4 (get-in burrow [:hallway 4])] (first (name h4)) ".")
-          (if-let [h5 (get-in burrow [:hallway 5])] (first (name h5)) ".")
-          (if-let [h6 (get-in burrow [:hallway 6])] (first (name h6)) ".")
-          (if-let [h7 (get-in burrow [:hallway 7])] (first (name h7)) ".")
-          (if-let [h8 (get-in burrow [:hallway 8])] (first (name h8)) ".")
-          (if-let [h9 (get-in burrow [:hallway 9])] (first (name h9)) ".")
-          (if-let [h10 (get-in burrow [:hallway 10])] (first (name h10)) ".")
-          (if-let [a0 (get-in burrow [:room :A 0])] (first (name a0)) ".")
-          (if-let [b0 (get-in burrow [:room :B 0])] (first (name b0)) ".")
-          (if-let [c0 (get-in burrow [:room :C 0])] (first (name c0)) ".")
-          (if-let [d0 (get-in burrow [:room :D 0])] (first (name d0)) ".")
-          (if-let [a1 (get-in burrow [:room :A 1])] (first (name a1)) ".")
-          (if-let [b1 (get-in burrow [:room :B 1])] (first (name b1)) ".")
-          (if-let [c1 (get-in burrow [:room :C 1])] (first (name c1)) ".")
-          (if-let [d1 (get-in burrow [:room :D 1])] (first (name d1)) ".")))
+                (map (fn [i]
+                       (a-or-period [:hallway i]))
+                     (range 11))
+                (a-or-period [:room :A 0])
+                (a-or-period [:room :B 0])
+                (a-or-period [:room :C 0])
+                (a-or-period [:room :D 0])
+                (a-or-period [:room :A 1])
+                (a-or-period [:room :B 1])
+                (a-or-period [:room :C 1])
+                (a-or-period [:room :D 1])]))))
 
 (defn energy [amphipod]
   (if-let [e (some-> amphipod name first str keyword energys)]
@@ -102,7 +94,7 @@
                    (:accumulated-cost journey)
                    (count (:moves journey))))
   (let [burrow (journey->burrow journey)
-        _ (println (burrow->str burrow))
+        ;; _ (println (burrow->str burrow))
         hallway-empty? (= #{nil} (set (get burrow :hallway)))
         amphipods-all-home? (reduce
                               (fn [a, b] (and a b))
