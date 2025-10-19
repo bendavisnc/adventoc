@@ -72,6 +72,9 @@
     e
     (throw (ex-info (str "Unknown amphipod energy for : " amphipod) {:amphipod amphipod}))))
 
+(defn room [amphipod]
+  (some-> amphipod name first str keyword))
+
 (defn can-move? [burrow amphipod position]
   true)
 
@@ -88,17 +91,30 @@
             burrow-empty
             amphipods)))
 
+(defn move-most-recent [amphipod moves]
+  (some (fn [move]
+          (when (= amphipod (first move))
+            move))
+        (rseq moves)))
+
 (defn goal [journey]
   (println (format "Checking goal for journey with accumulated-cost %d and %d moves"
                    (:accumulated-cost journey)
                    (count (:moves journey))))
-  (let [burrow (journey->burrow journey)]
-    (print (burrow->str burrow))
-    (when (and (= #{:A0 :A1} (set (get-in burrow [:room :A])))
-               (= #{:B0 :B1} (set (get-in burrow [:room :B])))
-               (= #{:C0 :C1} (set (get-in burrow [:room :C])))
-               (= #{:D0 :D1} (set (get-in burrow [:room :D])))
-               (= #{nil} (set (get burrow :hallway))))
+  (let [burrow (journey->burrow journey)
+        _ (println (burrow->str burrow))
+        hallway-empty? (= #{nil} (set (get burrow :hallway)))
+        amphipods-all-home? (reduce
+                              (fn [a, b] (and a b))
+                              (map (fn [amphipod]
+                                     (let [last-move (move-most-recent amphipod (:moves journey))
+                                           move-position (second last-move)
+                                           amphipod-room (when (= :room (first move-position))
+                                                           (second move-position))
+                                           home? (= (room amphipod) amphipod-room)]
+                                       home?))
+                                   (set (map first (:moves journey)))))]
+    (when (and hallway-empty? amphipods-all-home?)
       journey)))
 
 (defn distance [from, to]
@@ -140,12 +156,6 @@
 
 (defn weight [journey]
   (* -1 (:accumulated-cost journey)))
-
-(defn move-most-recent [amphipod moves]
-  (some (fn [move]
-          (when (= amphipod (first move))
-            move))
-        (rseq moves)))
 
 (defn move-applied [journey move]
   (let [[amphipod move-position] move]
