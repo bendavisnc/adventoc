@@ -4,19 +4,13 @@
    [shams.priority-queue :as pq])
   (:gen-class))
 
-(def energys {:A 1
-              :B 10
-              :C 100
-              :D 1000})
+(def rooms [:A :B :C :D])
 
-(def amphipods (sorted-set :A0
-                           :A1
-                           :B0
-                           :B1
-                           :C0
-                           :C1
-                           :D0
-                           :D1))
+(def energys (zipmap rooms (iterate #(* 10 %) 1)))
+
+(def amphipods (apply sorted-set (for [room rooms
+                                       index [0 1]]
+                                   (keyword (str (name room) index)))))
 
 (def burrow-empty {:hallway (vec (repeat 11 nil))
                    :room {:A [nil, nil]
@@ -25,7 +19,7 @@
                           :D [nil, nil]}})
 
 (def move-placements (concat (map #(vector :hallway %) (range 11))
-                       (for [room [:A :B :C :D]
+                       (for [room rooms
                              depth [0 1]]
                          [:room room depth])))
 

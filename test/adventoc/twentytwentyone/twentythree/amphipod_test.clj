@@ -14,6 +14,12 @@
                             [:A1 [:room :D 0]]
                             [:D1 [:room :D 1]]]})
 
+(def journey-start-tiny {:accumulated-cost 0
+                         :moves [[:A0 [:room :A 0]]
+                                 [:B0 [:room :A 1]]
+                                 [:B1 [:room :B 0]]
+                                 [:A1 [:room :B 1]]]})
+
 (deftest journey-to-burrow-test
   (testing "journey->burrow"
     (is (= {:hallway [nil nil nil nil nil nil nil nil nil nil nil]
@@ -78,7 +84,16 @@
                 "###A#D#C#A###"
                 "  #B#C#B#D#"
                 "  #########"])
-             s)))))
+             s)))
+    (testing "burrow->str (tiny burrow)"
+      (let [s (core/burrow->str (core/journey->burrow journey-start-tiny))]
+        (is (= (string/join "\n"
+                 ["#############"
+                  "#...........#"
+                  "###A#B#.#.###"
+                  "  #B#A#.#.#"
+                  "  #########"])
+              s))))))
 
 (deftest goal-test
   (testing "goal"
