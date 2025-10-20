@@ -73,7 +73,13 @@
 (deftest journey-afresh-test
   (testing "journeys-afresh"
     (let [journeys (core/journeys-afresh journey-start)]
-      (is (= 152 (count journeys))))))
+      (is (= 152 (count journeys)))))
+  (testing "journeys-afresh (tiny)"
+    (binding [core/rooms (take 2 core/rooms)]
+      (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
+      (let [journeys (core/journeys-afresh journey-start-tiny)]
+        (is (= 60 (count journeys)))))
+    (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)))
 
 (deftest burrow->str
   (testing "burrow->str"
@@ -84,16 +90,16 @@
                 "###A#D#C#A###"
                 "  #B#C#B#D#"
                 "  #########"])
-             s)))
-    (testing "burrow->str (tiny burrow)"
-      (let [s (core/burrow->str (core/journey->burrow journey-start-tiny))]
-        (is (= (string/join "\n"
-                 ["#############"
-                  "#...........#"
-                  "###A#B#.#.###"
-                  "  #B#A#.#.#"
-                  "  #########"])
-              s))))))
+             s))))
+  (testing "burrow->str (tiny burrow)"
+    (let [s (core/burrow->str (core/journey->burrow journey-start-tiny))]
+      (is (= (string/join "\n"
+               ["#############"
+                "#...........#"
+                "###A#B#.#.###"
+                "  #B#A#.#.#"
+                "  #########"])
+             s)))))
 
 (deftest goal-test
   (testing "goal"

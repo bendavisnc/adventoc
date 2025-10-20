@@ -4,7 +4,7 @@
    [shams.priority-queue :as pq])
   (:gen-class))
 
-(def rooms [:A :B :C :D])
+(def ^:dynamic rooms [:A :B :C :D])
 
 (def energys (zipmap rooms (iterate #(* 10 %) 1)))
 
@@ -164,8 +164,17 @@
 
 (defn amphipod-solve [journey]
   (let [queue (conj (pq/priority-queue weight)
-                    journey)]
+                    journey)
+        call-count (atom 0)
+        max-call-count 3]
     (loop [q queue]
+      (when (>= @call-count max-call-count)
+        (println (map (fn [j]
+                        (burrow->str (journey->burrow j)))
+                      q))
+        (throw (ex-info (str "Exceeded max call count of " max-call-count)
+                        {:max-call-count max-call-count})))
+      (swap! call-count inc)
       (println (count q) " journeys in queue, lowest cost so far: " (:accumulated-cost (peek q)))
       (if-let [journey-success (goal (peek q))]
         journey-success
@@ -192,12 +201,6 @@
 ;;   #A#D#C#A#
 ;;   #########
 
-;; (comment (let [j {:accumulated-cost 0
-;;                   :moves [[:A0 :room :A 0]
-;;                           [:B0 :room :A 1]
-;;                           [:D0 :room :B 0]
-;;                           [:C0 :room :B 1]
-;;                           [:C1 :room :C 0]
-;;                           [:B1 :room :C 1]
-;;                           [:A1 :room :D 0]
-;;                           [:D1 :room :D 1]]}
+(comment amphipods)
+
+(comment energys)
