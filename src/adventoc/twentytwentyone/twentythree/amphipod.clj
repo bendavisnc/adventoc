@@ -61,8 +61,11 @@
 (defn room [amphipod]
   (some-> amphipod name first str keyword))
 
-(defn can-move? [burrow amphipod position]
-  true)
+(defn move-most-recent [amphipod moves]
+  (some (fn [move]
+          (when (= amphipod (first move))
+            move))
+        (rseq moves)))
 
 (defn journey->burrow [journey]
   (assert (some-> journey :moves seq) "Journey has no moves")
@@ -77,11 +80,21 @@
             burrow-empty
             amphipods)))
 
-(defn move-most-recent [amphipod moves]
-  (some (fn [move]
-          (when (= amphipod (first move))
-            move))
-        (rseq moves)))
+(defn can-move? [journey, amphipod position]
+  ;; (println [:wat burrow amphipod position])
+  (let [burrow (journey->burrow journey)
+        current-position (second (move-most-recent amphipod (:moves journey)))
+        [current-room, current-room-index] (when (= :room (first current-position))
+                                             (rest current-position))]
+    (cond ;; Don't move into an occupied position.
+          (not (nil? (get-in burrow position)))
+          false
+          ;; Don't leave home if you don't need to.
+          (and (= (room amphipod) current-room)
+               (zero? current-room-index))
+          false
+          :else
+          true)))
 
 (defn goal [journey]
   (println (format "Checking goal for journey with accumulated-cost %d and %d moves"
@@ -159,8 +172,7 @@
         move-placement move-placements
         :when (can-move? journey amphipod move-placement)]
     (move-applied journey
-                  [amphipod
-                   move-placement])))
+                  [amphipod move-placement])))
 
 (defn amphipod-solve [journey]
   (let [queue (conj (pq/priority-queue weight)

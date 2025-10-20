@@ -73,12 +73,14 @@
 (deftest journey-afresh-test
   (testing "journeys-afresh"
     (let [journeys (core/journeys-afresh journey-start)]
-      (is (= 152 (count journeys)))))
+      (is (= 66 (count journeys)))))
   (testing "journeys-afresh (tiny)"
     (binding [core/rooms (take 2 core/rooms)]
       (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
       (let [journeys (core/journeys-afresh journey-start-tiny)]
-        (is (= 60 (count journeys)))))
+        (is (= 22 (count journeys)))))
+    ;; (let [journeys (core/journeys-afresh journey-start-tiny)]
+    ;; (is (= 60 (take 2 journeys)))))
     (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)))
 
 (deftest burrow->str
