@@ -12,7 +12,13 @@
                                        index [0 1]]
                                    (keyword (str (name room) index)))))
 
-(def burrow-empty {:hallway (vec (repeat 11 nil))
+(def hallway-size
+  (case (count rooms)
+    2 7
+    4 11
+    (throw (ex-info (str "Unknown hallway size for " (count rooms) " rooms") {:rooms rooms}))))
+
+(def burrow-empty {:hallway (vec (repeat hallway-size nil))
                    :room {:A [nil, nil]
                           :B [nil, nil]
                           :C [nil, nil]
@@ -81,17 +87,22 @@
             amphipods)))
 
 (defn can-move? [journey, amphipod position]
-  ;; (println [:wat burrow amphipod position])
   (let [burrow (journey->burrow journey)
         current-position (second (move-most-recent amphipod (:moves journey)))
         [current-room, current-room-index] (when (= :room (first current-position))
-                                             (rest current-position))]
+                                             (rest current-position))
+        other-index ({0 1 1 0} current-room-index)
+        other-occupant (get-in burrow [:room current-room other-index])]
     (cond ;; Don't move into an occupied position.
           (not (nil? (get-in burrow position)))
           false
           ;; Don't leave home if you don't need to.
-          (and (= (room amphipod) current-room)
-               (zero? current-room-index))
+          (and (= 0 current-room-index)
+               (= (room amphipod) current-room))
+          false
+          ;; No need to get out of the way if other guy doesn't need to leave
+          (and (= 1 current-room-index)
+               (= (room amphipod) (room other-occupant) current-room))
           false
           :else
           true)))
@@ -178,12 +189,12 @@
   (let [queue (conj (pq/priority-queue weight)
                     journey)
         call-count (atom 0)
-        max-call-count 3]
+        max-call-count 100]
     (loop [q queue]
       (when (>= @call-count max-call-count)
-        (println (map (fn [j]
-                        (burrow->str (journey->burrow j)))
-                      q))
+        ;; (dorun (map (fn [j]
+        ;;               (println (burrow->str (journey->burrow j))))
+        ;;             (take 3 q)))
         (throw (ex-info (str "Exceeded max call count of " max-call-count)
                         {:max-call-count max-call-count})))
       (swap! call-count inc)
@@ -199,13 +210,11 @@
   (let [journey-start {:accumulated-cost 0
                        :moves [[:A0 [:room :A 0]]
                                [:B0 [:room :A 1]]
-                               [:D0 [:room :B 0]]
-                               [:C0 [:room :B 1]]
-                               [:C1 [:room :C 0]]
-                               [:B1 [:room :C 1]]
-                               [:A1 [:room :D 0]]
-                               [:D1 [:room :D 1]]]}]
-    (println (amphipod-solve journey-start))))
+                               [:B1 [:room :B 0]]
+                               [:A1 [:room :B 1]]]}]
+    (binding [rooms (take 2 rooms)]
+      (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
+      (println (amphipod-solve journey-start)))))
 
 ;; #############
 ;; #...........#
@@ -216,3 +225,5 @@
 (comment amphipods)
 
 (comment energys)
+
+(comment (= 1 1 1))
