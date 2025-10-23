@@ -50,14 +50,14 @@
                 (map (fn [i]
                        (a-or-period [:hallway i]))
                      (range 11))
-                (a-or-period [:room :A 0])
-                (a-or-period [:room :B 0])
-                (a-or-period [:room :C 0])
-                (a-or-period [:room :D 0])
                 (a-or-period [:room :A 1])
                 (a-or-period [:room :B 1])
                 (a-or-period [:room :C 1])
-                (a-or-period [:room :D 1])]))))
+                (a-or-period [:room :D 1])
+                (a-or-period [:room :A 0])
+                (a-or-period [:room :B 0])
+                (a-or-period [:room :C 0])
+                (a-or-period [:room :D 0])]))))
 
 (defn energy [amphipod]
   (if-let [e (some-> amphipod name first str keyword energys)]

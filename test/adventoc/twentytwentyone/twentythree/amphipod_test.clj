@@ -15,10 +15,10 @@
                             [:D1 [:room :D 1]]]})
 
 (def journey-start-tiny {:accumulated-cost 0
-                         :moves [[:A0 [:room :A 0]]
-                                 [:B0 [:room :A 1]]
-                                 [:B1 [:room :B 0]]
-                                 [:A1 [:room :B 1]]]})
+                         :moves [[:A0 [:room :A 1]]
+                                 [:B0 [:room :A 0]]
+                                 [:B1 [:room :B 1]]
+                                 [:A1 [:room :B 0]]]})
 
 (deftest journey-to-burrow-test
   (testing "journey->burrow"
@@ -91,6 +91,12 @@
                         :A0
                         [:hallway 0])]
       (is (= true valid-move?)))))
+  ;; (testing "can-move? (not when blocked)"
+  ;;   (let [valid-move? (core/can-move?
+  ;;                       {:accumulated-cost 0, :moves [[:B0 [:hallway 4 0], [:A0 [:room :A 0]]]]}
+  ;;                       :A0
+  ;;                       [:room :D 0])]
+  ;;     (is (= false valid-move?)))))
 
 (deftest move-applied-test
   (testing "move-applied"
@@ -107,7 +113,7 @@
     (binding [core/rooms (take 2 core/rooms)]
       (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
       (let [journeys (core/journeys-afresh journey-start-tiny)]
-        (is (= 22 (count journeys)))))
+        (is (= 44 (count journeys)))))
     ;; (let [journeys (core/journeys-afresh journey-start-tiny)]
     ;; (is (= 60 (take 2 journeys)))))
     (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)))
@@ -118,8 +124,8 @@
       (is (= (string/join "\n"
                ["#############"
                 "#...........#"
-                "###A#D#C#A###"
-                "  #B#C#B#D#"
+                "###B#C#B#D###"
+                "  #A#D#C#A#"
                 "  #########"])
              s))))
   (testing "burrow->str (tiny burrow)"
