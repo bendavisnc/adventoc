@@ -63,6 +63,35 @@
       (is (= [:A0 [:hallway 0]]
              move)))))
 
+(deftest can-move-test
+  (testing "can-move? (to an empty space)"
+    (let [valid-move? (core/can-move?
+                        {:accumulated-cost 0, :moves [[:B0 [:hallway 0]], [:A0 [:room :B 0]]]}
+                        :A0
+                        [:hallway 0])]
+      (is (= false valid-move?)))
+    (let [valid-move? (core/can-move?
+                        {:accumulated-cost 0, :moves [[:A0 [:room :B 0]]]}
+                        :A0
+                        [:hallway 0])]
+      (is (= true valid-move?))))
+  (testing "can-move? (not when already home)"
+    (let [valid-move? (core/can-move?
+                        {:accumulated-cost 0, :moves [[:A0 [:room :A 0]]]}
+                        :A0
+                        [:hallway 0])]
+      (is (= false valid-move?)))
+    (let [valid-move? (core/can-move?
+                        {:accumulated-cost 0, :moves [[:A1 [:room :A 0]], [:A0 [:room :A 1]]]}
+                        :A0
+                        [:hallway 0])]
+      (is (= false valid-move?)))
+    (let [valid-move? (core/can-move?
+                        {:accumulated-cost 0, :moves [[:A0 [:room :A 1]]]}
+                        :A0
+                        [:hallway 0])]
+      (is (= true valid-move?)))))
+
 (deftest move-applied-test
   (testing "move-applied"
     (let [{:keys [moves accumulated-cost]} (core/move-applied journey-start

@@ -168,14 +168,16 @@
   (* -1 (:accumulated-cost journey)))
 
 (defn move-applied [journey move]
-  (let [[amphipod move-position] move]
-    (assert (amphipods amphipod) (str "Unknown amphipod: " amphipod))
+  (let [[amphipod move-position] move
+        _ (assert (amphipods amphipod) (str "Unknown amphipod: " amphipod))
+        move-position-start (second (move-most-recent amphipod (:moves journey)))
+        _ (assert move-position-start (str "Amphipod " amphipod " has no starting position in journey moves."))]
     (-> journey
         (update :moves conj move)
         (update :accumulated-cost
                 +
                 (cost amphipod
-                      (second (move-most-recent amphipod (:moves journey)))
+                      move-position-start
                       move-position)))))
 
 (defn journeys-afresh [journey]
@@ -210,11 +212,16 @@
   (let [journey-start {:accumulated-cost 0
                        :moves [[:A0 [:room :A 0]]
                                [:B0 [:room :A 1]]
-                               [:B1 [:room :B 0]]
-                               [:A1 [:room :B 1]]]}]
-    (binding [rooms (take 2 rooms)]
-      (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
-      (println (amphipod-solve journey-start)))))
+                               [:D0 [:room :B 0]]
+                               [:C0 [:room :B 1]]
+                               [:C1 [:room :C 0]]
+                               [:B1 [:room :C 1]]
+                               [:A1 [:room :D 0]]
+                               [:D1 [:room :D 1]]]}]
+    (println (amphipod-solve journey-start))))
+    ;; (binding [rooms (take 2 rooms)]
+    ;;   (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
+    ;;   (println (amphipod-solve journey-start)))))
 
 ;; #############
 ;; #...........#
