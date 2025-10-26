@@ -63,6 +63,32 @@
       (is (= [:A0 [:hallway 0]]
              move)))))
 
+(deftest positions-between-test
+  (testing "positions-between, hallway to hallway"
+    (let [positions (core/positions-between [:hallway 0] [:hallway 4])]
+      (is (= [[:hallway 1] [:hallway 2] [:hallway 3]]
+             positions))))
+  (testing "positions-between, hallway to hallway, other direction"
+    (let [positions (core/positions-between [:hallway 4] [:hallway 0])]
+      (is (= (reverse (core/positions-between [:hallway 0] [:hallway 4]))
+            positions))))
+  (testing "positions-between, room to hallway"
+    (let [positions (core/positions-between [:room :A 0] [:hallway 5])]
+      (is (= [[:room :A 1] [:hallway 3] [:hallway 4]]
+             positions))))
+  (testing "positions-between, room to hallway, other direction"
+    (let [positions (core/positions-between [:hallway 5] [:room :A 0])]
+      (is (= (reverse (core/positions-between [:room :A 0] [:hallway 5]))
+             positions))))
+  (testing "positions-between, room to room"
+    (let [positions (core/positions-between [:room :A 0] [:room :B 0])]
+      (is (= [[:room :A 1] [:hallway 3] [:hallway 4] [:hallway 5] [:room :B 1]]
+             positions))))
+  (testing "positions-between, room to room, other direction"
+    (let [positions (core/positions-between [:room :B 0] [:room :A 0])]
+      (is (= (reverse (core/positions-between [:room :A 0] [:room :B 0]))
+             positions)))))
+
 (deftest can-move-test
   (testing "can-move? (to an empty space)"
     (let [valid-move? (core/can-move?
