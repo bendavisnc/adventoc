@@ -129,6 +129,11 @@
           (and (= 1 current-room-index)
                (= (room amphipod) (room other-occupant) current-room))
           false
+          ;; No one can be in the way.
+          (not (= #{nil} (set (for [p (positions-between current-position
+                                                         position)]
+                                (get-in burrow p)))))
+          false
           :else
           true)))
 
@@ -216,7 +221,7 @@
   (let [queue (conj (pq/priority-queue weight)
                     journey)
         call-count (atom 0)
-        max-call-count 100]
+        max-call-count ##Inf]
     (loop [q queue]
       (when (>= @call-count max-call-count)
         ;; (dorun (map (fn [j]
@@ -233,20 +238,29 @@
                        (pop q)
                        (journeys-afresh (peek q))))))))
 
-(defn -main [& _]
+(defn minimain []
   (let [journey-start {:accumulated-cost 0
-                       :moves [[:A0 [:room :A 0]]
-                               [:B0 [:room :A 1]]
-                               [:D0 [:room :B 0]]
-                               [:C0 [:room :B 1]]
-                               [:C1 [:room :C 0]]
-                               [:B1 [:room :C 1]]
-                               [:A1 [:room :D 0]]
-                               [:D1 [:room :D 1]]]}]
-    (println (amphipod-solve journey-start))))
-    ;; (binding [rooms (take 2 rooms)]
-    ;;   (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
-    ;;   (println (amphipod-solve journey-start)))))
+                       :moves [[:A0 [:room :B 0]]
+                               [:A1 [:room :A 1]]
+                               [:B0 [:room :A 0]]
+                               [:B1 [:room :B 1]]]}]
+    (binding [rooms (take 2 rooms)]
+      (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
+      (println (amphipod-solve journey-start)))))
+
+(defn -main [& args]
+  (if (= ["true"] args)
+    (minimain)
+    (let [journey-start {:accumulated-cost 0
+                         :moves [[:A0 [:room :A 0]]
+                                 [:B0 [:room :A 1]]
+                                 [:D0 [:room :B 0]]
+                                 [:C0 [:room :B 1]]
+                                 [:C1 [:room :C 0]]
+                                 [:B1 [:room :C 1]]
+                                 [:A1 [:room :D 0]]
+                                 [:D1 [:room :D 1]]]}]
+      (println (amphipod-solve journey-start)))))
 
 ;; #############
 ;; #...........#
