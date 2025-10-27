@@ -68,10 +68,12 @@
   (some-> amphipod name first str keyword))
 
 (defn move-most-recent [amphipod moves]
-  (some (fn [move]
-          (when (= amphipod (first move))
-            move))
-        (rseq moves)))
+  (or (some (fn [move]
+              (when (= amphipod (first move))
+                move))
+            (rseq moves))
+      (throw (ex-info (str "Amphipod `" amphipod "` has no moves.") {:amphipod amphipod
+                                                                     :moves moves}))))
 
 (defn journey->burrow [journey]
   (assert (some-> journey :moves seq) "Journey has no moves")
@@ -128,6 +130,11 @@
           ;; No need to get out of the way if other guy doesn't need to leave
           (and (= 1 current-room-index)
                (= (room amphipod) (room other-occupant) current-room))
+          false
+          ;; Can't hover in front of own room.
+          (and (= :hallway (first position))
+               (= (second position)
+                  (room-position (room amphipod))))
           false
           ;; No one can be in the way.
           (not (= #{nil} (set (for [p (positions-between current-position
@@ -224,7 +231,7 @@
   (let [queue (conj (pq/priority-queue weight)
                     journey)
         call-count (atom 0)
-        max-call-count ##Inf]
+        max-call-count 12]
     (loop [q queue
            seen #{}]
       (when (>= @call-count max-call-count)
@@ -235,6 +242,7 @@
                         {:max-call-count max-call-count})))
       (swap! call-count inc)
       (println (count q) " journeys in queue, lowest cost so far: " (:accumulated-cost (peek q)))
+      (println (burrow->str (journey->burrow (peek q))))
       (if-let [journey-success (goal (peek q))]
         journey-success
         (recur (reduce (fn [acc, s]
