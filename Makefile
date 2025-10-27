@@ -8,7 +8,7 @@ autotest:
 	find . -iname *.clj | entr make test
 
 run: format
-	clj -M:dev --main ${MAIN} "true"
+	clj -M:dev --main ${MAIN}
 
 test: format
 	clj -M:test

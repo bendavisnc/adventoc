@@ -210,19 +210,23 @@
                       move-position-start
                       move-position)))))
 
-(defn journeys-afresh [journey]
+(defn journeys-afresh [journey, seen]
   (for [amphipod amphipods
         move-placement move-placements
-        :when (can-move? journey amphipod move-placement)]
-    (move-applied journey
-                  [amphipod move-placement])))
+        :when (can-move? journey amphipod move-placement)
+        :let [journey-next (move-applied journey
+                                         [amphipod move-placement])
+              burrow-next (journey->burrow journey-next)]
+        :when (not (seen burrow-next))]
+    journey-next))
 
 (defn amphipod-solve [journey]
   (let [queue (conj (pq/priority-queue weight)
                     journey)
         call-count (atom 0)
         max-call-count ##Inf]
-    (loop [q queue]
+    (loop [q queue
+           seen #{}]
       (when (>= @call-count max-call-count)
         ;; (dorun (map (fn [j]
         ;;               (println (burrow->str (journey->burrow j))))
@@ -236,7 +240,8 @@
         (recur (reduce (fn [acc, s]
                          (conj acc s))
                        (pop q)
-                       (journeys-afresh (peek q))))))))
+                       (journeys-afresh (peek q) seen))
+               (conj seen (journey->burrow (peek q))))))))
 
 (defn minimain []
   (let [journey-start {:accumulated-cost 0
@@ -272,4 +277,4 @@
 
 (comment energys)
 
-(comment (= 1 1 1))
+(comment (conj #{1} 2))
