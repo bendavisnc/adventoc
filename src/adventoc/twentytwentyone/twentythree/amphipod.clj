@@ -24,16 +24,16 @@
                           :C [nil, nil]
                           :D [nil, nil]}})
 
-(def move-placements (concat (map #(vector :hallway %) (range 11))
+(def move-placements (concat (map #(vector :hallway %) (range hallway-size))
                        (for [room rooms
                              depth [0 1]]
                          [:room room depth])))
 
 (def room-position
-  {:A 3
-   :B 5
-   :C 7
-   :D 9})
+  {:A 2
+   :B 4
+   :C 6
+   :D 8})
 
 (defn burrow->str [burrow]
   (let [a-or-period (fn [path]
@@ -84,7 +84,13 @@
                                         move))
                                     moves)
                     move-position (second last-move)]
-                (assoc-in acc move-position amphipod)))
+                (try
+                  (assoc-in acc move-position amphipod)
+                  (catch Exception e
+                    (throw (ex-info (str "Error placing amphipod " amphipod " at position " move-position)
+                                    {:amphipod amphipod
+                                     :move-position move-position}
+                                    e))))))
             burrow-empty
             amphipods)))
 
@@ -115,7 +121,7 @@
 
 (defn can-move? [journey, amphipod position]
   (let [burrow (journey->burrow journey)
-        current-position (second (move-most-recent amphipod (:moves journey)))
+        [_ current-position] (move-most-recent amphipod (:moves journey))
         [current-room, current-room-index] (when (= :room (first current-position))
                                              (rest current-position))
         other-index ({0 1 1 0} current-room-index)
@@ -231,18 +237,22 @@
   (let [queue (conj (pq/priority-queue weight)
                     journey)
         call-count (atom 0)
-        max-call-count 12]
+        ;; max-call-count ##Inf]
+        max-call-count 1000]
     (loop [q queue
            seen #{}]
       (when (>= @call-count max-call-count)
-        ;; (dorun (map (fn [j]
-        ;;               (println (burrow->str (journey->burrow j))))
-        ;;             (take 3 q)))
+        (dorun (map (fn [i]
+                      (println (burrow->str (journey->burrow (update (peek q)
+                                                                     :moves
+                                                                     (fn [acc]
+                                                                       (vec (take i acc))))))))
+                    (range 1 (count (:moves (peek q))))))
         (throw (ex-info (str "Exceeded max call count of " max-call-count)
                         {:max-call-count max-call-count})))
       (swap! call-count inc)
       (println (count q) " journeys in queue, lowest cost so far: " (:accumulated-cost (peek q)))
-      (println (burrow->str (journey->burrow (peek q))))
+      ;; (println (burrow->str (journey->burrow (peek q))))
       (if-let [journey-success (goal (peek q))]
         journey-success
         (recur (reduce (fn [acc, s]
@@ -286,3 +296,9 @@
 (comment energys)
 
 (comment (conj #{1} 2))
+
+(comment (for [x (range 10)
+               :when (even? x)
+               :when (> x 3)
+               :let [y (* x 2)]]
+           y))

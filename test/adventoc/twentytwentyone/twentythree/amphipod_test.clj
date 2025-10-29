@@ -32,12 +32,12 @@
 (deftest distance-test
   (testing "distance from room to hallway"
     (let [distance (core/distance [:room :C 1] [:hallway 3])]
-      (is (= 4 distance)))
+      (is (= 3 distance)))
     (let [distance (core/distance [:room :A 0] [:hallway 0])]
-      (is (= 4 distance))))
+      (is (= 3 distance))))
   (testing "distance from hallway to room"
     (let [distance (core/distance [:hallway 3] [:room :C 1])]
-      (is (= 4 distance))))
+      (is (= 3 distance))))
   (testing "distance from room to room"
     (let [distance (core/distance [:room :B 0] [:room :C 1])]
       (is (= 5 distance))))
@@ -53,7 +53,7 @@
 (deftest cost-test
   (testing "cost"
     (let [cost (core/cost :B1 [:room :C 1] [:hallway 3])]
-      (is (= 40 cost)))))
+      (is (= 30 cost)))))
 
 (deftest moves-most-recent-test
   (testing "move-most-recent"
@@ -74,7 +74,7 @@
             positions))))
   (testing "positions-between, room to hallway"
     (let [positions (core/positions-between [:room :A 0] [:hallway 5])]
-      (is (= [[:room :A 1] [:hallway 3] [:hallway 4]]
+      (is (= [[:room :A 1] [:hallway 2] [:hallway 3] [:hallway 4]]
              positions))))
   (testing "positions-between, room to hallway, other direction"
     (let [positions (core/positions-between [:hallway 5] [:room :A 0])]
@@ -82,7 +82,7 @@
              positions))))
   (testing "positions-between, room to room"
     (let [positions (core/positions-between [:room :A 0] [:room :B 0])]
-      (is (= [[:room :A 1] [:hallway 3] [:hallway 4] [:hallway 5] [:room :B 1]]
+      (is (= [[:room :A 1] [:hallway 2] [:hallway 3] [:hallway 4] [:room :B 1]]
              positions))))
   (testing "positions-between, room to room, other direction"
     (let [positions (core/positions-between [:room :B 0] [:room :A 0])]
@@ -119,35 +119,43 @@
       (is (= true valid-move?))))
   (testing "can-move? (not in front of own base)"
     (let [valid-move? (core/can-move?
-                        {:accumulated-cost 0, :moves [[:A0 [:room :B 0]]]}
+                        {:accumulated-cost 0, :moves [[:B0 [:room :A 0]], [:A0 [:room :A 1]]]}
                         :A0
-                        [:hallway 3])]
+                        [:hallway 2])]
       (is (= false valid-move?))))
   (testing "can-move? (not when blocked)"
     (let [valid-move? (core/can-move?
                         {:accumulated-cost 0, :moves [[:B0 [:hallway 6 0]], [:A0 [:room :B 0]]]}
                         :A0
                         [:room :D 0])]
-      (is (= false valid-move?)))))
+      (is (= false valid-move?))))
+  (testing "can-move? (not in front of own base, tiny)"
+    (binding [core/rooms (take 2 core/rooms)]
+      (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
+      (let [valid-move? (core/can-move?
+                          {:accumulated-cost 0, :moves [[:B0 [:room :A 0]], [:A0 [:room :A 1]]]}
+                          :A0
+                          [:hallway 2])]
+        (is (= false valid-move?))))
+    (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)))
+
 (deftest move-applied-test
   (testing "move-applied"
     (let [{:keys [moves accumulated-cost]} (core/move-applied journey-start
                                                               [:B1 [:hallway 3]])]
-      (is (= 40 accumulated-cost))
+      (is (= 30 accumulated-cost))
       (is (= [:B1 [:hallway 3]] (last moves))))))
 
-;; (deftest journey-afresh-test
-;;   (testing "journeys-afresh"
-;;     (let [journeys (core/journeys-afresh journey-start #{})]
-;;       (is (= 37 (count journeys))))))
-;;   ;; (testing "journeys-afresh (tiny)"
-;;   ;;   (binding [core/rooms (take 2 core/rooms)]
-;;   ;;     (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
-;;   ;;     (let [journeys (core/journeys-afresh journey-start-tiny #{})]
-;;   ;;       (is (= 20 (count journeys)))))
-;;   ;;   ;; (let [journeys (core/journeys-afresh journey-start-tiny)]
-;;   ;;   ;; (is (= 60 (take 2 journeys)))))
-;;   ;;   (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)))
+(deftest journey-afresh-test
+  (testing "journeys-afresh"
+    (let [journeys (core/journeys-afresh journey-start #{})]
+      (is (= 37 (count journeys)))))
+  (testing "journeys-afresh (tiny)"
+    (binding [core/rooms (take 2 core/rooms)]
+      (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
+      (let [journeys (core/journeys-afresh journey-start-tiny #{})]
+        (is (= 12 (count journeys)))))
+    (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)))
 
 (deftest burrow->str
   (testing "burrow->str"
