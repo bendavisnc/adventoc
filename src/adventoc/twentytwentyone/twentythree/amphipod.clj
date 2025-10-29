@@ -35,6 +35,9 @@
    :C 6
    :D 8})
 
+(declare weight)
+(def journey-queue (pq/priority-queue weight))
+
 (defn burrow->str [burrow]
   (let [a-or-period (fn [path]
                       (or (some-> (get-in burrow path)
@@ -64,7 +67,7 @@
     e
     (throw (ex-info (str "Unknown amphipod energy for : " amphipod) {:amphipod amphipod}))))
 
-(defn room [amphipod]
+(defn room->amphipod [amphipod]
   (some-> amphipod name first str keyword))
 
 (defn move-most-recent [amphipod moves]
@@ -131,16 +134,16 @@
           false
           ;; Don't leave home if you don't need to.
           (and (= 0 current-room-index)
-               (= (room amphipod) current-room))
+               (= (room->amphipod amphipod) current-room))
           false
           ;; No need to get out of the way if other guy doesn't need to leave
           (and (= 1 current-room-index)
-               (= (room amphipod) (room other-occupant) current-room))
+               (= (room->amphipod amphipod) (room->amphipod other-occupant) current-room))
           false
           ;; Can't hover in front of own room.
           (and (= :hallway (first position))
                (= (second position)
-                  (room-position (room amphipod))))
+                  (room-position (room->amphipod amphipod))))
           false
           ;; No one can be in the way.
           (not (= #{nil} (set (for [p (positions-between current-position
@@ -164,7 +167,7 @@
                                            move-position (second last-move)
                                            amphipod-room (when (= :room (first move-position))
                                                            (second move-position))
-                                           home? (= (room amphipod) amphipod-room)]
+                                           home? (= (room->amphipod amphipod) amphipod-room)]
                                        home?))
                                    (set (map first (:moves journey)))))]
     (when (and hallway-empty? amphipods-all-home?)
@@ -235,7 +238,7 @@
     (update journey-next :seen conj burrow-next)))
 
 (defn amphipod-solve [journey]
-  (let [queue (conj (pq/priority-queue weight)
+  (let [queue (conj journey-queue
                     journey)
         call-count (atom 0)
         max-call-count ##Inf

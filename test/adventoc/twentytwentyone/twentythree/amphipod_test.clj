@@ -200,3 +200,12 @@
                                    [:B1 [:room :B 1]]]}
           goal (core/goal journey-success)]
       (is (= true (boolean goal))))))
+
+(deftest queue-test
+  (testing "queue"
+    (let [q (-> core/journey-queue
+                (conj (update journey-start :accumulated-cost + 20))
+                (conj (update journey-start :accumulated-cost + 10))
+                (conj (update journey-start :accumulated-cost + 30)))]
+      (is (= 3 (count q)))
+      (is (= 10 (:accumulated-cost (peek q)))))))
