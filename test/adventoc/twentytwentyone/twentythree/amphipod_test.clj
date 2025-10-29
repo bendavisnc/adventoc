@@ -12,13 +12,15 @@
                             [:C1 [:room :C 0]]
                             [:B1 [:room :C 1]]
                             [:A1 [:room :D 0]]
-                            [:D1 [:room :D 1]]]})
+                            [:D1 [:room :D 1]]]
+                    :seen #{}})
 
 (def journey-start-tiny {:accumulated-cost 0
                          :moves [[:A0 [:room :A 1]]
                                  [:B0 [:room :A 0]]
                                  [:B1 [:room :B 1]]
-                                 [:A1 [:room :B 0]]]})
+                                 [:A1 [:room :B 0]]]
+                         :seen #{}})
 
 (deftest journey-to-burrow-test
   (testing "journey->burrow"
@@ -148,12 +150,12 @@
 
 (deftest journey-afresh-test
   (testing "journeys-afresh"
-    (let [journeys (core/journeys-afresh journey-start #{})]
+    (let [journeys (core/journeys-afresh journey-start)]
       (is (= 37 (count journeys)))))
   (testing "journeys-afresh (tiny)"
     (binding [core/rooms (take 2 core/rooms)]
       (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
-      (let [journeys (core/journeys-afresh journey-start-tiny #{})]
+      (let [journeys (core/journeys-afresh journey-start-tiny)]
         (is (= 12 (count journeys)))))
     (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)))
 
