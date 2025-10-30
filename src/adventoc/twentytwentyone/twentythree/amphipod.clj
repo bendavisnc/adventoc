@@ -129,8 +129,8 @@
         [_ current-position] (move-most-recent amphipod (:moves journey))
         [current-room, current-room-index] (when (= :room (first current-position))
                                              (rest current-position))
-        [dest-room, dest-room-index] (when (= :room (first position)
-                                             (rest position)))
+        [dest-room, dest-room-index] (when (= :room (first position))
+                                       (rest position))
         other-index ({0 1 1 0} current-room-index)
         other-occupant (get-in burrow [:room current-room other-index])]
     (cond ;; Don't move into an occupied position.
@@ -150,12 +150,12 @@
           false
           ;; Can't move into home of right burrow if occupied by wrong amphipod
           (and (= :room (first position))
-               (every? (fn [occupant]
-                         (or (nil? occupant)
-                             (= (amphipod->room amphipod)
-                                (amphipod->room occupant))))
-                       [(get-in burrow [:room dest-room 0])
-                        (get-in burrow [:room dest-room 1])]))
+               (not-every? (fn [occupant]
+                             (or (nil? occupant)
+                                 (= (amphipod->room amphipod)
+                                    (amphipod->room occupant))))
+                           [(get-in burrow [:room dest-room 0])
+                            (get-in burrow [:room dest-room 1])]))
           false
           ;; Can't hover in front of own room.
           (and (= :hallway (first position))
@@ -171,9 +171,6 @@
           true)))
 
 (defn goal [journey]
-  (println (format "Checking goal for journey with accumulated-cost %d and %d moves"
-                   (:accumulated-cost journey)
-                   (count (:moves journey))))
   (let [burrow (journey->burrow journey)
         ;; _ (println (burrow->str burrow))
         hallway-empty? (= #{nil} (set (get burrow :hallway)))
@@ -259,20 +256,24 @@
         max-move-count ##Inf]
         ;; max-call-count 10000]
     (loop [q queue]
-      (when (or (>= @call-count max-call-count)
-                (>= (count (:moves (peek q)))
-                    max-move-count))
-        (dorun (map (fn [i]
-                      (println (burrow->str (journey->burrow (update (peek q)
-                                                                     :moves
-                                                                     (fn [acc]
-                                                                       (vec (take i acc))))))))
-                    (range 1 (count (:moves (peek q))))))
-        (throw (ex-info "Exceeded max count."
-                        {:max-call-count max-call-count
-                         :max-move-count max-move-count})))
+      (when (zero? (mod @call-count 100))
+        (println "Progress check:" @call-count
+                 "queue size:" (count q)
+                 "lowest cost:" (:accumulated-cost (peek q))))
+      ;; (when (or (>= @call-count max-call-count)
+      ;;           (>= (count (:moves (peek q)))
+      ;;               max-move-count))
+      ;;   (dorun (map (fn [i]
+      ;;                 (println (burrow->str (journey->burrow (update (peek q)
+      ;;                                                                :moves
+      ;;                                                                (fn [acc]
+      ;;                                                                  (vec (take i acc))))))))
+      ;;               (range 1 (count (:moves (peek q))))))
+      ;;   (throw (ex-info "Exceeded max count."
+      ;;                   {:max-call-count max-call-count
+      ;;                    :max-move-count max-move-count})))
       (swap! call-count inc)
-      (println (count q) " journeys in queue, lowest cost so far: " (:accumulated-cost (peek q)))
+      ;; (println (count q) " journeys in queue, lowest cost so far: " (:accumulated-cost (peek q)))
       ;; (println (burrow->str (journey->burrow (peek q))))
       (if-let [journey-success (goal (peek q))]
         journey-success
@@ -307,23 +308,3 @@
 
                          :seen #{}}]
       (println (amphipod-solve journey-start)))))
-
-;; #############
-;; #...........#
-;; ###B#C#B#D###
-;;   #A#D#C#A#
-;;   #########
-
-(comment amphipods)
-
-(comment energys)
-
-(comment (conj #{1} 2))
-
-(comment (for [x (range 10)
-               :when (even? x)
-               :when (> x 3)
-               :let [y (* x 2)]]
-           y))
-
-(comment (* -1 nil))
