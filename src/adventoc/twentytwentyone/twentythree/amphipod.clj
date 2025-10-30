@@ -35,7 +35,9 @@
    :C 6
    :D 8})
 
-(declare weight)
+(defn weight [journey]
+  (* -1 (:accumulated-cost journey)))
+
 (def journey-queue (pq/priority-queue weight))
 
 (defn burrow->str [burrow]
@@ -67,7 +69,7 @@
     e
     (throw (ex-info (str "Unknown amphipod energy for : " amphipod) {:amphipod amphipod}))))
 
-(defn room->amphipod [amphipod]
+(defn amphipod->room [amphipod]
   (some-> amphipod name first str keyword))
 
 (defn move-most-recent [amphipod moves]
@@ -127,6 +129,8 @@
         [_ current-position] (move-most-recent amphipod (:moves journey))
         [current-room, current-room-index] (when (= :room (first current-position))
                                              (rest current-position))
+        [dest-room, dest-room-index] (when (= :room (first position)
+                                             (rest position)))
         other-index ({0 1 1 0} current-room-index)
         other-occupant (get-in burrow [:room current-room other-index])]
     (cond ;; Don't move into an occupied position.
@@ -134,16 +138,29 @@
           false
           ;; Don't leave home if you don't need to.
           (and (= 0 current-room-index)
-               (= (room->amphipod amphipod) current-room))
+               (= (amphipod->room amphipod) current-room))
           false
           ;; No need to get out of the way if other guy doesn't need to leave
           (and (= 1 current-room-index)
-               (= (room->amphipod amphipod) (room->amphipod other-occupant) current-room))
+               (= (amphipod->room amphipod) (amphipod->room other-occupant) current-room))
+          false
+          ;; Can't move into home of wrong burrow
+          (and (= :room (first position))
+               (not= (amphipod->room amphipod) dest-room))
+          false
+          ;; Can't move into home of right burrow if occupied by wrong amphipod
+          (and (= :room (first position))
+               (every? (fn [occupant]
+                         (or (nil? occupant)
+                             (= (amphipod->room amphipod)
+                                (amphipod->room occupant))))
+                       [(get-in burrow [:room dest-room 0])
+                        (get-in burrow [:room dest-room 1])]))
           false
           ;; Can't hover in front of own room.
           (and (= :hallway (first position))
                (= (second position)
-                  (room-position (room->amphipod amphipod))))
+                  (room-position (amphipod->room amphipod))))
           false
           ;; No one can be in the way.
           (not (= #{nil} (set (for [p (positions-between current-position
@@ -167,7 +184,7 @@
                                            move-position (second last-move)
                                            amphipod-room (when (= :room (first move-position))
                                                            (second move-position))
-                                           home? (= (room->amphipod amphipod) amphipod-room)]
+                                           home? (= (amphipod->room amphipod) amphipod-room)]
                                        home?))
                                    (set (map first (:moves journey)))))]
     (when (and hallway-empty? amphipods-all-home?)
@@ -210,9 +227,6 @@
   (* (energy amphipod)
      (distance from to)))
 
-(defn weight [journey]
-  (* -1 (:accumulated-cost journey)))
-
 (defn move-applied [journey move]
   (let [[amphipod move-position] move
         _ (assert (amphipods amphipod) (str "Unknown amphipod: " amphipod))
@@ -242,7 +256,7 @@
                     journey)
         call-count (atom 0)
         max-call-count ##Inf
-        max-move-count 12]
+        max-move-count ##Inf]
         ;; max-call-count 10000]
     (loop [q queue]
       (when (or (>= @call-count max-call-count)
@@ -289,7 +303,9 @@
                                  [:C1 [:room :C 0]]
                                  [:B1 [:room :C 1]]
                                  [:A1 [:room :D 0]]
-                                 [:D1 [:room :D 1]]]}]
+                                 [:D1 [:room :D 1]]]
+
+                         :seen #{}}]
       (println (amphipod-solve journey-start)))))
 
 ;; #############

@@ -49,8 +49,8 @@
 
 (deftest energy-test
   (testing "energy"
-    (let [energy (core/energy :B1)]
-      (is (= 10 energy)))))
+    (let [energies (map core/energy [:A0, :B0, :C0, :D0])]
+      (is (= [1, 10, 100, 1000] energies)))))
 
 (deftest cost-test
   (testing "cost"
@@ -127,9 +127,21 @@
       (is (= false valid-move?))))
   (testing "can-move? (not when blocked)"
     (let [valid-move? (core/can-move?
-                        {:accumulated-cost 0, :moves [[:B0 [:hallway 6 0]], [:A0 [:room :B 0]]]}
+                        {:accumulated-cost 0, :moves [[:B0 [:hallway 6]], [:A0 [:room :B 0]]]}
                         :A0
                         [:room :D 0])]
+      (is (= false valid-move?))))
+  (testing "can-move? (not into non-home burrow)"
+    (let [valid-move? (core/can-move?
+                        {:accumulated-cost 0, :moves [[:A0 [:hallway 0]]]}
+                        :A0
+                        [:room :D 0])]
+      (is (= false valid-move?))))
+  (testing "can-move? (not into home burrow, if currently occupied by different amphipod)"
+    (let [valid-move? (core/can-move?
+                        {:accumulated-cost 0, :moves [[:B0 [:room :A 0]] [:A0 [:hallway 0]]]}
+                        :A0
+                        [:room :A 1])]
       (is (= false valid-move?))))
   (testing "can-move? (not in front of own base, tiny)"
     (binding [core/rooms (take 2 core/rooms)]
