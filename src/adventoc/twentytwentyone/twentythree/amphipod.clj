@@ -1,6 +1,7 @@
 (ns adventoc.twentytwentyone.twentythree.amphipod
   (:require
    [clojure.core :exclude [name]]
+   [clojure.string :as string]
    [shams.priority-queue :as pq])
   (:gen-class))
 
@@ -242,11 +243,15 @@
         move-placement move-placements
         :when (can-move? journey amphipod move-placement)
         :let [journey-next (move-applied journey
-                                         [amphipod move-placement])
-              burrow-next (journey->burrow journey-next)]
-        :when (not ((:seen journey)
-                    burrow-next))]
-    (update journey-next :seen conj burrow-next)))
+                                         [amphipod move-placement])]]
+    journey-next))
+
+(defn journey->breadcrumbs [journey]
+  (string/join "\n\n" (for [i (range 1 (inc (count (:moves journey))))]
+                        (burrow->str (journey->burrow (update journey
+                                                        :moves
+                                                        (fn [acc]
+                                                          (vec (take i acc)))))))))
 
 (defn amphipod-solve [journey]
   (let [queue (conj journey-queue
@@ -255,8 +260,9 @@
         max-call-count ##Inf
         max-move-count ##Inf]
         ;; max-call-count 10000]
-    (loop [q queue]
-      (when (zero? (mod @call-count 100))
+    (loop [q queue
+           seen #{}]
+      (when (zero? (mod @call-count 1000))
         (println "Progress check:" @call-count
                  "queue size:" (count q)
                  "lowest cost:" (:accumulated-cost (peek q))))
@@ -275,20 +281,26 @@
       (swap! call-count inc)
       ;; (println (count q) " journeys in queue, lowest cost so far: " (:accumulated-cost (peek q)))
       ;; (println (burrow->str (journey->burrow (peek q))))
-      (if-let [journey-success (goal (peek q))]
-        journey-success
-        (recur (reduce (fn [acc, s]
-                         (conj acc s))
-                       (pop q)
-                       (journeys-afresh (peek q))))))))
+      (let [journey-atm (peek q)
+            burrow-atm (journey->burrow journey-atm)
+            journey-success (goal journey-atm)
+            journeys-next (for [j (journeys-afresh journey-atm)
+                                :let [b (journey->burrow j)]
+                                :when (not (seen b))]
+                            j)]
+        (or journey-success
+            (recur (reduce (fn [acc, s]
+                             (conj acc s))
+                           (pop q)
+                           journeys-next)
+                   (conj seen burrow-atm)))))))
 
 (defn minimain []
   (let [journey-start {:accumulated-cost 0
                        :moves [[:A0 [:room :B 0]]
                                [:A1 [:room :A 1]]
                                [:B0 [:room :A 0]]
-                               [:B1 [:room :B 1]]]
-                       :seen #{}}]
+                               [:B1 [:room :B 1]]]}]
     (binding [rooms (take 2 rooms)]
       (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
       (println (amphipod-solve journey-start)))))
@@ -304,7 +316,8 @@
                                  [:C1 [:room :C 0]]
                                  [:B1 [:room :C 1]]
                                  [:A1 [:room :D 0]]
-                                 [:D1 [:room :D 1]]]
+                                 [:D1 [:room :D 1]]]}]
 
-                         :seen #{}}]
       (println (amphipod-solve journey-start)))))
+
+(comment (take 6 (range 5)))
