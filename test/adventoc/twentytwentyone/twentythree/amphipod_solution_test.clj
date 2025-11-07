@@ -9,7 +9,7 @@
                                  [:B0 [:room :A 0]]
                                  [:B1 [:room :B 1]]
                                  [:A1 [:room :B 0]]]
-                         :seen #{}})
+                         :cost [0, 0, 0, 0]})
 
 (deftest solution-test
   (testing "solution"

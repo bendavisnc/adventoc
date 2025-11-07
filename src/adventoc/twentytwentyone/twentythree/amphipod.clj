@@ -229,14 +229,16 @@
   (let [[amphipod move-position] move
         _ (assert (amphipods amphipod) (str "Unknown amphipod: " amphipod))
         move-position-start (second (move-most-recent amphipod (:moves journey)))
-        _ (assert move-position-start (str "Amphipod " amphipod " has no starting position in journey moves."))]
+        _ (assert move-position-start (str "Amphipod " amphipod " has no starting position in journey moves."))
+        move-cost (cost amphipod
+                    move-position-start
+                    move-position)]
     (-> journey
         (update :moves conj move)
+        (update :cost conj move-cost)
         (update :accumulated-cost
                 +
-                (cost amphipod
-                      move-position-start
-                      move-position)))))
+                move-cost))))
 
 (defn journeys-afresh [journey]
   (for [amphipod amphipods
@@ -247,11 +249,18 @@
     journey-next))
 
 (defn journey->breadcrumbs [journey]
-  (string/join "\n\n" (for [i (range 1 (inc (count (:moves journey))))]
-                        (burrow->str (journey->burrow (update journey
-                                                        :moves
-                                                        (fn [acc]
-                                                          (vec (take i acc)))))))))
+  (assert (= (count (:cost journey))
+             (count (:moves journey)))
+          "Journey cost and moves length mismatch.")
+  (string/join (flatten (for [i (range (count (:moves journey)))]
+                          ["\n"
+                           (str "cost: " (get-in journey [:cost i]))
+                           "\n"
+                           (burrow->str (journey->burrow (update journey
+                                                                 :moves
+                                                                 (fn [acc]
+                                                                   (vec (take (inc i) acc))))))
+                           "\n"]))))
 
 (defn amphipod-solve [journey]
   (let [queue (conj journey-queue
@@ -297,6 +306,7 @@
 
 (defn minimain []
   (let [journey-start {:accumulated-cost 0
+                       :cost [0, 0,0, 0]
                        :moves [[:A0 [:room :B 0]]
                                [:A1 [:room :A 1]]
                                [:B0 [:room :A 0]]
