@@ -3,33 +3,27 @@
    [clojure.string :as str]))
 
 ;; https://www.w3schools.com/dsa/trydsa.php?filename=demo_graphs_dijkstra
-(defn dijkstra [graph start-vertex-data]
-  (let [vertex-data (:vertex-data graph)
-        adj-matrix  (:adj-matrix graph)
-        size        (count vertex-data)
-        start-idx   (.indexOf vertex-data start-vertex-data)
-        inf         Double/POSITIVE_INFINITY]
+(defn dijkstra [graph start-vertex]
+  (let [{:keys [vertex-data adj-matrix]} graph
+        size       (count vertex-data)
+        start-idx  (.indexOf vertex-data start-vertex)
+        inf        Double/POSITIVE_INFINITY]
 
     (loop [distances (assoc (vec (repeat size inf)) start-idx 0)
            visited   (vec (repeat size false))]
 
-      (let [unvisited (remove #(visited (first %))
-                              (map-indexed vector distances))
-            u         (when (seq unvisited)
-                        (apply min-key second unvisited))]
-        (if (nil? u)
+      (let [unvisited (keep-indexed (fn [i d] (when-not (visited i) [i d])) distances)]
+        (if (empty? unvisited)
           distances
-          (let [[u-idx u-dist] u
+          (let [[u-idx u-dist] (apply min-key second unvisited)
                 updated-distances
                 (reduce (fn [ds v]
-                          (let [edge (get-in adj-matrix [u-idx v])
-                                alt  (if (= u-dist inf)
-                                       inf
-                                       (+ u-dist edge))]
-                            (if (and (pos? edge)
-                                  (not (visited v))
-                                  (< alt (ds v)))
-                              (assoc ds v alt)
+                          (let [edge (get-in adj-matrix [u-idx v])]
+                            (if (and edge (pos? edge))
+                              (let [alt (+ u-dist edge)]
+                                (if (< alt (ds v))
+                                  (assoc ds v alt)
+                                  ds))
                               ds)))
                         distances
                         (range size))]
