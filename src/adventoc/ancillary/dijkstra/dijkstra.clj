@@ -5,20 +5,18 @@
 ;; https://www.w3schools.com/dsa/trydsa.php?filename=demo_graphs_dijkstra
 (defn dijkstra [graph start-vertex]
   (let [{:keys [vertex-data adj-matrix]} graph
-        size       (count vertex-data)
-        start-idx  (.indexOf vertex-data start-vertex)
         inf        Double/POSITIVE_INFINITY]
-
-    (loop [distances (assoc (vec (repeat size inf)) start-idx 0)
-           visited   (vec (repeat size false))]
-
-      (let [unvisited (keep-indexed (fn [i d] (when-not (visited i) [i d])) distances)]
+    (loop [distances (-> {}
+                         (into (map vector vertex-data (repeat inf)))
+                         (assoc start-vertex 0))
+           visited   #{}]
+      (let [unvisited (filter (fn [[v _]] (not (visited v))) distances)]
         (if (empty? unvisited)
           distances
-          (let [[u-idx u-dist] (apply min-key second unvisited)
+          (let [[u-vert u-dist] (apply min-key second unvisited)
                 updated-distances
                 (reduce (fn [ds v]
-                          (let [edge (get-in adj-matrix [u-idx v])]
+                          (let [edge (get-in adj-matrix [u-vert v])]
                             (if (and edge (pos? edge))
                               (let [alt (+ u-dist edge)]
                                 (if (< alt (ds v))
@@ -26,13 +24,16 @@
                                   ds))
                               ds)))
                         distances
-                        (range size))]
-            (recur updated-distances (assoc visited u-idx true))))))))
+                        vertex-data)]
+            (recur updated-distances (conj visited u-vert))))))))
 
 (defn print-distances [graph start]
   (let [distances (dijkstra graph start)]
-    (doseq [[i d] (map-indexed vector distances)]
+    (doseq [[v d] distances]
       (println (format "Shortest distance from %s to %s: %s"
                        (str/upper-case (name start))
-                       (str/upper-case (name (get-in graph [:vertex-data i])))
+                       (str/upper-case (name v))
                        d)))))
+
+(comment (let [m {:a 9 :b 2 :c 3}]
+           (apply min-key second m)))
