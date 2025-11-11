@@ -15,7 +15,9 @@ run: format
 	clj -M:dev --main ${MAIN}
 
 test: format
-	clj -M:test cognitect.test-runner -n adventoc.twentytwentyone.twentythree.amphipod-test
+	# clj -M:test cognitect.test-runner -n adventoc.twentytwentyone.twentythree.amphipod-test
+	# clj -M:test cognitect.test-runner -n adventoc.ancillary.dijkstra.dijkstra-test
+	clj -M:test cognitect.test-runner -n adventoc.twentytwentyone.fifteen.chiton-test
 
 format:
 	@echo "Formatting clj."

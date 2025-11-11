@@ -16,6 +16,7 @@ class Graph:
     def dijkstra(self, start_vertex_data):
         start_vertex = self.vertex_data.index(start_vertex_data)
         distances = [float('inf')] * self.size
+        predecessors = [None] * self.size
         distances[start_vertex] = 0
         visited = [False] * self.size
 
@@ -37,8 +38,20 @@ class Graph:
                     alt = distances[u] + self.adj_matrix[u][v]
                     if alt < distances[v]:
                         distances[v] = alt
+                        predecessors[v] = u
 
-        return distances
+        return distances, predecessors
+
+    def get_path(self, predecessors, start_vertex, end_vertex):
+        path = []
+        current = self.vertex_data.index(end_vertex)
+        while current is not None:
+            path.insert(0, self.vertex_data[current])
+            current = predecessors[current]
+            if current == self.vertex_data.index(start_vertex):
+                path.insert(0, start_vertex)
+                break
+        return '->'.join(path)  # Join the vertices with '->'
 
 g = Graph(7)
 
@@ -63,9 +76,8 @@ g.add_edge(6, 5, 5)  # G - F, weight 5
 
 # Dijkstra's algorithm from D to all vertices
 print("Dijkstra's Algorithm starting from vertex D:\n")
-distances = g.dijkstra('D')
+distances, predecessors = g.dijkstra('D')
+print(predecessors)
 for i, d in enumerate(distances):
-    print(f"Shortest distance from D to {g.vertex_data[i]}: {d}")
-
-
-#Python
+    path = g.get_path(predecessors, 'D', g.vertex_data[i])
+    print(f"{path}, Distance: {d}")
