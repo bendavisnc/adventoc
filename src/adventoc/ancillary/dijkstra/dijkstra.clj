@@ -43,29 +43,34 @@
 ;; 17                  prev[v] ← u
 ;; 18
 ;; 19      return dist[], prev[]
-
 (defn dijkstra-q [graph start]
   (let [inf ##Inf
         vertices (keys graph)
         distances (-> (into (sorted-map) (map vector vertices (repeat inf)))
                       (assoc start 0))
         q (-> (pq/priority-queue (comp (fn [x] (some-> x (* -1)))
-                                       distances))
-              (conj start))]
+                                       second))
+              (conj [start, 0]))]
     (loop [q q
-           distances distances]
+           distances distances
+           visited #{}]
       (if (empty? q)
         distances
-        (let [u (peek q)
-              neighbors (graph u)
-              [distances' q'] (reduce-kv (fn [[d q] v w]
-                                           (let [alt (+ (distances u) w)]
-                                             (if (< alt (get d v inf))
-                                               [(assoc d v alt) (conj q v)]
-                                               [d q])))
-                                         [distances (pop q)]
-                                         neighbors)]
-          (recur q' distances'))))))
+        (let [[u, _] (peek q)
+              q  (pop q)]
+          (if (visited u)
+            ;; Skip nodes we've already processed
+            (recur q distances visited)
+            (let [neighbors (graph u)
+                  [distances' q'] (reduce-kv
+                                    (fn [[d q] v w]
+                                      (let [alt (+ (distances u) w)]
+                                        (if (< alt (get d v inf))
+                                          [(assoc d v alt) (conj q [v, alt])]
+                                          [d q])))
+                                    [distances q]
+                                    neighbors)]
+              (recur q' distances' (conj visited u)))))))))
 
 (defn print-distances [graph start]
   (let [distances (dijkstra graph start)]
