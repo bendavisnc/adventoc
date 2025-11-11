@@ -12,6 +12,8 @@
 
 (deftest dijkstra-test
   (testing "dijkstra"
-    ;; (time (core/print-distances graph :d))
     (is (= [4 8 6 0 2 10 7]
-           (vals (core/dijkstra graph :d))))))
+           (vals (time (core/dijkstra graph :d))))))
+  (testing "dijkstra-q"
+    (is (= [4 8 6 0 2 10 7]
+           (vals (time (core/dijkstra-q graph :d)))))))
