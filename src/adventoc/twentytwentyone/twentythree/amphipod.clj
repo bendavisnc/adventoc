@@ -99,30 +99,32 @@
             burrow-empty
             amphipods)))
 
-(defn positions-between [from, to]
-  (let [hallway-from-index (or (when (= :hallway (first from))
-                                 (second from))
-                               (room-position (second from)))
-        hallway-to-index (or (when (= :hallway (first to))
-                               (second to))
-                             (room-position (second to)))
-        is-left-to-right? (<= hallway-from-index hallway-to-index)
-        hallway-positions (when is-left-to-right?
-                            (map (fn [i]
-                                   [:hallway i])
-                                 (range (if (= :hallway (first from))
-                                          (inc hallway-from-index)
-                                          hallway-from-index)
-                                        (if (= :hallway (first to))
-                                          hallway-to-index
-                                          (inc hallway-to-index)))))
-        from-room-position (when (= [:room 0] [(first from) (last from)])
-                             [[:room (second from) 1]])
-        to-room-position (when (= [:room 0] [(first to) (last to)])
-                           [[:room (second to) 1]])]
-    (if is-left-to-right?
-      (concat from-room-position hallway-positions to-room-position)
-      (reverse (positions-between to from)))))
+(def positions-between
+  (memoize
+    (fn [from, to]
+      (let [hallway-from-index (or (when (= :hallway (first from))
+                                     (second from))
+                                 (room-position (second from)))
+            hallway-to-index (or (when (= :hallway (first to))
+                                   (second to))
+                               (room-position (second to)))
+            is-left-to-right? (<= hallway-from-index hallway-to-index)
+            hallway-positions (when is-left-to-right?
+                                (map (fn [i]
+                                       [:hallway i])
+                                  (range (if (= :hallway (first from))
+                                           (inc hallway-from-index)
+                                           hallway-from-index)
+                                    (if (= :hallway (first to))
+                                      hallway-to-index
+                                      (inc hallway-to-index)))))
+            from-room-position (when (= [:room 0] [(first from) (last from)])
+                                 [[:room (second from) 1]])
+            to-room-position (when (= [:room 0] [(first to) (last to)])
+                               [[:room (second to) 1]])]
+        (if is-left-to-right?
+          (concat from-room-position hallway-positions to-room-position)
+          (reverse (positions-between to from)))))))
 
 (defn can-move? [journey, amphipod position]
   (let [burrow (:burrow journey)
