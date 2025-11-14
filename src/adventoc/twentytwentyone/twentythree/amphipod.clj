@@ -188,32 +188,32 @@
     (when (and hallway-empty? amphipods-all-home?)
       journey)))
 
-(defn distance [from, to]
-  (assert (#{:room :hallway} (first from)) (str "Invalid `from` position: " from))
-  (assert (#{:room :hallway} (first to)) (str "Invalid `to` position: " to))
-  (case [(first from) (first to)]
-    [:hallway :hallway]
-    (let [hallway-from-index (second from)
-          hallway-to-index (second to)]
-      (Math/abs (- hallway-from-index hallway-to-index)))
-    [:room :hallway]
-    (let [[_ room, room-index] from
-          hallway-room-index (room room-position)
-          back-room (if (zero? room-index) 1 0)]
-      (+ back-room 1 (distance [:hallway hallway-room-index] to)))
-    [:hallway :room]
-    (distance to from)
-    [:room :room]
-    (let [[_ room-from, room-from-index] from
-          hallway-from-room-index (room-from room-position)
-          back-from-room (if (zero? room-from-index) 1 0)
-          [_ room-to, room-to-index] to
-          hallway-to-room-index (room-to room-position)
-          back-to-room (if (zero? room-to-index) 1 0)]
-      (if (= room-from room-to)
-        (Math/abs (- room-from-index room-to-index))
-        (+ back-from-room 1 back-to-room 1 (distance [:hallway hallway-from-room-index] [:hallway hallway-to-room-index]))))
-    (throw (ex-info (str "Unknown distance for from " from " to " to) {:from from :to to}))))
+(def distance (memoize (fn [from, to]
+                         (assert (#{:room :hallway} (first from)) (str "Invalid `from` position: " from))
+                         (assert (#{:room :hallway} (first to)) (str "Invalid `to` position: " to))
+                         (case [(first from) (first to)]
+                           [:hallway :hallway]
+                           (let [hallway-from-index (second from)
+                                 hallway-to-index (second to)]
+                             (Math/abs (- hallway-from-index hallway-to-index)))
+                           [:room :hallway]
+                           (let [[_ room, room-index] from
+                                 hallway-room-index (room room-position)
+                                 back-room (if (zero? room-index) 1 0)]
+                             (+ back-room 1 (distance [:hallway hallway-room-index] to)))
+                           [:hallway :room]
+                           (distance to from)
+                           [:room :room]
+                           (let [[_ room-from, room-from-index] from
+                                 hallway-from-room-index (room-from room-position)
+                                 back-from-room (if (zero? room-from-index) 1 0)
+                                 [_ room-to, room-to-index] to
+                                 hallway-to-room-index (room-to room-position)
+                                 back-to-room (if (zero? room-to-index) 1 0)]
+                             (if (= room-from room-to)
+                               (Math/abs (- room-from-index room-to-index))
+                               (+ back-from-room 1 back-to-room 1 (distance [:hallway hallway-from-room-index] [:hallway hallway-to-room-index]))))
+                           (throw (ex-info (str "Unknown distance for from " from " to " to) {:from from :to to}))))))
 
 (defn cost [amphipod from, to]
   (* (energy amphipod)

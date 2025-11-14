@@ -4,9 +4,9 @@
    [clj-async-profiler.core :as prof]))
 
 (defn profile-tiny! []
-  (prof/start {:event :cpu})
-  (runner/run-solver-tiny)
-  (prof/stop {:generate-flamegraph? false}))
+  (prof/profile
+    (runner/run-solver-tiny))
+  (prof/serve-ui 8080))
 
 (comment
   (profile-tiny!))
