@@ -2,8 +2,7 @@
   (:require
    [clojure.core :exclude [name]]
    [clojure.string :as string]
-   [shams.priority-queue :as pq])
-  (:gen-class))
+   [shams.priority-queue :as pq]))
 
 (def ^:dynamic rooms [:A :B :C :D])
 
@@ -126,12 +125,12 @@
       (reverse (positions-between to from)))))
 
 (defn can-move? [journey, amphipod position]
-  (let [burrow (journey->burrow journey)
+  (let [burrow (:burrow journey)
         [_ current-position] (move-most-recent amphipod (:moves journey))
         [current-room, current-room-index] (when (= :room (first current-position))
                                              (rest current-position))
-        [dest-room, dest-room-index] (when (= :room (first position))
-                                       (rest position))
+        [dest-room, _] (when (= :room (first position))
+                         (rest position))
         other-index ({0 1 1 0} current-room-index)
         other-occupant (get-in burrow [:room current-room other-index])]
     (cond ;; Don't move into an occupied position.
@@ -172,8 +171,7 @@
           true)))
 
 (defn goal [journey]
-  (let [burrow (journey->burrow journey)
-        ;; _ (println (burrow->str burrow))
+  (let [burrow (:burrow journey)
         hallway-empty? (= #{nil} (set (get burrow :hallway)))
         amphipods-all-home? (reduce
                               (fn [a, b] (and a b))
@@ -192,33 +190,27 @@
   (assert (#{:room :hallway} (first from)) (str "Invalid `from` position: " from))
   (assert (#{:room :hallway} (first to)) (str "Invalid `to` position: " to))
   (case [(first from) (first to)]
-    [:room :hallway]
-    (let [hallway-index (second to)
-          [_ room, room-index] from
-          back-room (if (zero? room-index) 1 0)]
-      (+ (Math/abs (- hallway-index (room room-position)))
-         back-room))
-    [:hallway :room]
-    (let [hallway-index (second from)
-          [_ room, room-index] to
-          back-room (if (zero? room-index) 1 0)]
-      (+ (Math/abs (- hallway-index (room room-position)))
-         back-room))
     [:hallway :hallway]
     (let [hallway-from-index (second from)
           hallway-to-index (second to)]
       (Math/abs (- hallway-from-index hallway-to-index)))
+    [:room :hallway]
+    (let [[_ room, room-index] from
+          hallway-room-index (room room-position)
+          back-room (if (zero? room-index) 1 0)]
+      (+ back-room 1 (distance [:hallway hallway-room-index] to)))
+    [:hallway :room]
+    (distance to from)
     [:room :room]
     (let [[_ room-from, room-from-index] from
-          [_ room-to, room-to-index] to]
-      (cond (= room-from room-to)
-            (Math/abs (- room-from-index room-to-index))
-            :else
-            (+ (Math/abs (- (+ (room-from room-position))
-                            (+ (room-to room-position))))
-              room-from-index
-              room-to-index
-              2)))
+          hallway-from-room-index (room-from room-position)
+          back-from-room (if (zero? room-from-index) 1 0)
+          [_ room-to, room-to-index] to
+          hallway-to-room-index (room-to room-position)
+          back-to-room (if (zero? room-to-index) 1 0)]
+      (if (= room-from room-to)
+        (Math/abs (- room-from-index room-to-index))
+        (+ back-from-room 1 back-to-room 1 (distance [:hallway hallway-from-room-index] [:hallway hallway-to-room-index]))))
     (throw (ex-info (str "Unknown distance for from " from " to " to) {:from from :to to}))))
 
 (defn cost [amphipod from, to]
@@ -240,12 +232,16 @@
                 +
                 move-cost))))
 
+(defn assoc-burrow [journey]
+  (assoc journey :burrow (journey->burrow journey)))
+
 (defn journeys-afresh [journey]
   (for [amphipod amphipods
         move-placement move-placements
         :when (can-move? journey amphipod move-placement)
-        :let [journey-next (move-applied journey
-                                         [amphipod move-placement])]]
+        :let [journey-next (-> journey
+                               (move-applied [amphipod move-placement])
+                               (assoc-burrow))]]
     journey-next))
 
 (defn journey->breadcrumbs [journey]
@@ -264,70 +260,27 @@
 
 (defn amphipod-solve [journey]
   (let [queue (conj journey-queue
-                    journey)
-        call-count (atom 0)
-        max-call-count ##Inf
-        max-move-count ##Inf]
-        ;; max-call-count 10000]
+                    (assoc-burrow journey))
+        call-count (atom 0)]
     (loop [q queue
            seen #{}]
       (when (zero? (mod @call-count 1000))
         (println "Progress check:" @call-count
                  "queue size:" (count q)
                  "lowest cost:" (:accumulated-cost (peek q))))
-      ;; (when (or (>= @call-count max-call-count)
-      ;;           (>= (count (:moves (peek q)))
-      ;;               max-move-count))
-      ;;   (dorun (map (fn [i]
-      ;;                 (println (burrow->str (journey->burrow (update (peek q)
-      ;;                                                                :moves
-      ;;                                                                (fn [acc]
-      ;;                                                                  (vec (take i acc))))))))
-      ;;               (range 1 (count (:moves (peek q))))))
-      ;;   (throw (ex-info "Exceeded max count."
-      ;;                   {:max-call-count max-call-count
-      ;;                    :max-move-count max-move-count})))
       (swap! call-count inc)
-      ;; (println (count q) " journeys in queue, lowest cost so far: " (:accumulated-cost (peek q)))
-      ;; (println (burrow->str (journey->burrow (peek q))))
       (let [journey-atm (peek q)
-            burrow-atm (journey->burrow journey-atm)
-            journey-success (goal journey-atm)
-            journeys-next (for [j (journeys-afresh journey-atm)
-                                :let [b (journey->burrow j)]
-                                :when (not (seen b))]
-                            j)]
-        (or journey-success
-            (recur (reduce (fn [acc, s]
-                             (conj acc s))
-                           (pop q)
-                           journeys-next)
-                   (conj seen burrow-atm)))))))
-
-(defn minimain []
-  (let [journey-start {:accumulated-cost 0
-                       :cost [0, 0,0, 0]
-                       :moves [[:A0 [:room :B 0]]
-                               [:A1 [:room :A 1]]
-                               [:B0 [:room :A 0]]
-                               [:B1 [:room :B 1]]]}]
-    (binding [rooms (take 2 rooms)]
-      (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
-      (println (amphipod-solve journey-start)))))
-
-(defn -main [& args]
-  (if (= ["true"] args)
-    (minimain)
-    (let [journey-start {:accumulated-cost 0
-                         :moves [[:A0 [:room :A 0]]
-                                 [:B0 [:room :A 1]]
-                                 [:D0 [:room :B 0]]
-                                 [:C0 [:room :B 1]]
-                                 [:C1 [:room :C 0]]
-                                 [:B1 [:room :C 1]]
-                                 [:A1 [:room :D 0]]
-                                 [:D1 [:room :D 1]]]}]
-
-      (println (amphipod-solve journey-start)))))
-
-(comment (take 6 (range 5)))
+            burrow-atm (:burrow journey-atm)]
+        (if (seen burrow-atm)
+          (recur (pop q) seen)
+          (let [journey-success (goal journey-atm)
+                journeys-next (for [j (journeys-afresh journey-atm)
+                                    :let [b (:burrow j)]
+                                    :when (not (seen b))]
+                                j)]
+            (or journey-success
+                (recur (reduce (fn [acc, s]
+                                 (conj acc s))
+                         (pop q)
+                         journeys-next)
+                  (conj seen burrow-atm)))))))))
