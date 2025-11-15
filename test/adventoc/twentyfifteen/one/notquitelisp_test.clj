@@ -24,3 +24,9 @@
   (testing "))) and )())()) both result in floor -3."
     (is (= -3 (core/notquitelisp ")))")))
     (is (= -3 (core/notquitelisp ")())())")))))
+
+(deftest basement-position-test
+  (testing ") causes him to enter the basement at character position 1"
+    (is (= 1 (core/basement-position ")"))))
+  (testing "()()) causes him to enter the basement at character position 5"
+    (is (= 5 (core/basement-position "()())")))))
