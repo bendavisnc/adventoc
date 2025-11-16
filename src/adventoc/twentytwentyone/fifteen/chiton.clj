@@ -56,12 +56,37 @@
       (recur from (conj acc (get-in graph (rseq to))))
       (rseq (conj acc (get-in graph (rseq to)))))))
 
-(defn chiton [input]
-  (let [graph (input->graph input)
+(defn graph-rows-columns-switch [graph]
+  (vec (for [row-i (range (count (first graph)))]
+         (vec (for [column-i (range (count graph))]
+                (get-in graph [column-i row-i]))))))
+
+(defn row-times [graph, times]
+  (vec (for [row graph]
+         (vec (flatten
+                (for [times-i (range times)]
+                  (for [v row
+                        :let [v+ (+ v times-i)]]
+                    (if (< 9 v+)
+                      (+ (- v 10) times-i 1)
+                      v+))))))))
+
+(defn graph-times [graph, times]
+  (-> graph
+      (row-times times)
+      (graph-rows-columns-switch)
+      (row-times times)
+      (graph-rows-columns-switch)))
+
+(defn chiton [input & [times]]
+  (let [graph (if times
+                (-> input input->graph (graph-times times))
+                (input->graph input))
         x-end (dec (count (first graph)))
         y-end (dec (count graph))
         {:keys [predecessors]} (dijkstra graph [0, 0])]
-    (solution-seq graph predecessors [x-end, y-end])))
+    (rest ;; don't count starting palce
+      (solution-seq graph predecessors [x-end, y-end]))))
 
 (comment (nextdoor [3, 3], [0, 1]))
 
@@ -69,3 +94,21 @@
 
 (comment (let [g [[0 1 2], [7 8 9]]]
            (get-in g [1 2])))
+
+
+(comment (let [input (str/join "\n"
+                               ["1163751742"
+                                "1381373672"
+                                "2136511328"
+                                "3694931569"
+                                "7463417111"
+                                "1319128137"
+                                "1359912421"
+                                "3125421639"
+                                "1293138521"
+                                "2311944581"])
+               graph (-> input input->graph (graph-times 5))
+               s (str/join "\n"
+                           (map #(str/join "" %)
+                                graph))]
+           (spit "wut.txt" s)))

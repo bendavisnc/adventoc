@@ -68,5 +68,43 @@
 
 (deftest chiton-test
   (testing "chiton produces correct path"
-    (is (= [1 1 2 1 3 6 5 1 1 1 5 1 1 3 2 3 2 1 1]
+    (is (= [1 2 1 3 6 5 1 1 1 5 1 1 3 2 3 2 1 1]
            (core/chiton puzzle)))))
+
+(deftest graph-rows-columns-switch-test
+  (testing "graphs can have rows and columns switched"
+    (let [g [[1 3 8]
+             [2 1 3]]]
+      (is (= [[1 2]
+              [3 1]
+              [8 3]]
+             (core/graph-rows-columns-switch g))))
+    (let [g [[1 2]
+             [3 1]
+             [8 3]]]
+      (is (=
+            [[1 3 8]
+             [2 1 3]]
+            (core/graph-rows-columns-switch g))))))
+
+(deftest graph-times-test
+  (testing "graphs can be multiplied"
+    (let [g [[1 1 6]
+             [1 3 8]
+             [2 1 3]]]
+      (is (=
+            [[1 1 6 2 2 7 3 3 8]
+             [1 3 8 2 4 9 3 5 1]
+             [2 1 3 3 2 4 4 3 5]
+             [2 2 7 3 3 8 4 4 9]
+             [2 4 9 3 5 1 4 6 2]
+             [3 2 4 4 3 5 5 4 6]
+             [3 3 8 4 4 9 5 5 1]
+             [3 5 1 4 6 2 5 7 3]
+             [4 3 5 5 4 6 6 5 7]]
+            (core/graph-times g 3))))))
+
+(deftest chiton-5x-sum-test
+  (testing "chiton produces correct result, 5x graph"
+    (is (= 315
+           (apply + (core/chiton puzzle 5))))))
