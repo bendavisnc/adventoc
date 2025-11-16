@@ -95,7 +95,6 @@
 (comment (let [g [[0 1 2], [7 8 9]]]
            (get-in g [1 2])))
 
-
 (comment (let [input (str/join "\n"
                                ["1163751742"
                                 "1381373672"

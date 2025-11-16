@@ -64,6 +64,48 @@
                 (a-or-period [:room :C 0])
                 (a-or-period [:room :D 0])]))))
 
+(defn graph-rows-columns-switch [graph]
+  (vec (for [row-i (range (count (first graph)))]
+         (vec (for [column-i (range (count graph))]
+                (get-in graph [column-i row-i]))))))
+
+(defn str->burrow [s]
+  (let [[amphipods-acc _]
+        (reduce (fn [[acc, seen], c]
+                  (let [amphipod-char (#{\A, \B, \C, \D} c)
+                        amph (when amphipod-char
+                               (some (fn [i]
+                                       (let [a (keyword (str amphipod-char i))]
+                                         (when (not (seen a))
+                                           a)))
+                                     (range ##Inf)))]
+                    (if amph
+                      [(conj acc amph) (conj seen amph)]
+                      [acc, seen])))
+                [[], #{}]
+                s)
+        amphipod-graph (->> amphipods-acc
+                            (partition 4)
+                            (map vec)
+                            vec
+                            graph-rows-columns-switch)]
+    (-> burrow-empty
+        (assoc-in [:room :A] (amphipod-graph 0))
+        (assoc-in [:room :B] (amphipod-graph 1))
+        (assoc-in [:room :C] (amphipod-graph 2))
+        (assoc-in [:room :D] (amphipod-graph 3)))))
+
+(defn journey-start [burrow]
+  {:accumulated-cost 0
+   :seen #{}
+   :burrow burrow
+   :moves (reduce (fn [acc, [room [occ-a, occ-b]]]
+                    (-> acc
+                        (conj [occ-a [:room room 0]])
+                        (conj [occ-b [:room room 1]])))
+                  []
+                  (:room burrow))})
+
 (defn energy [amphipod]
   (if-let [e (some-> amphipod name first str keyword energys)]
     e
@@ -286,3 +328,5 @@
                          (pop q)
                          journeys-next)
                   (conj seen burrow-atm)))))))))
+
+(comment (keyword (str \A)))

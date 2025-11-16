@@ -178,7 +178,7 @@
         (is (= 12 (count journeys)))))
     (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)))
 
-(deftest burrow->str
+(deftest burrow->str-test
   (testing "burrow->str"
     (let [s (core/burrow->str (core/journey->burrow journey-start))]
       (is (= (string/join "\n"
@@ -197,6 +197,18 @@
                 "  #B#A#.#.#"
                 "  #########"])
              s)))))
+
+(deftest str->burrow-test
+  (testing "str->burrow"
+    (let [s (core/burrow->str (core/journey->burrow journey-start))]
+      (is (= {:hallway [nil nil nil nil nil nil nil nil nil nil nil]
+              :room {:A [:B0 :A0], :B [:C0 :D1], :C [:B1 :C1], :D [:D0 :A1]}}
+             (core/str->burrow s))))))
+
+(deftest journey-start-test
+  (testing "journey-start"
+    (is (= 7
+           (core/journey-start (core/journey->burrow journey-start))))))
 
 (deftest goal-test
   (testing "goal"
