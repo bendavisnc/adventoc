@@ -2,6 +2,7 @@
   (:require
    [clojure.core :exclude [name]]
    [clojure.string :as string]
+   [clojure.string :as str]
    [shams.priority-queue :as pq]))
 
 (def ^:dynamic rooms [:A :B :C :D])
@@ -102,15 +103,17 @@
     burrow))
 
 (defn journey-start [burrow]
-  {:accumulated-cost 0
-   :seen #{}
-   :burrow burrow
-   :moves (reduce (fn [acc, [room [occ-a, occ-b]]]
-                    (-> acc
-                        (conj [occ-a [:room room 0]])
-                        (conj [occ-b [:room room 1]])))
-                  []
-                  (:room burrow))})
+  (let [moves (reduce (fn [acc, [room [occ-a, occ-b]]]
+                        (-> acc
+                            (conj [occ-a [:room room 0]])
+                            (conj [occ-b [:room room 1]])))
+                      []
+                      (:room burrow))]
+    {:accumulated-cost 0
+     :seen #{}
+     :burrow burrow
+     :moves moves
+     :cost (vec (repeat (count moves) 0))}))
 
 (defn energy [amphipod]
   (if-let [e (some-> amphipod name first str keyword energys)]
@@ -183,42 +186,47 @@
                          (rest position))
         other-index ({0 1 1 0} current-room-index)
         other-occupant (get-in burrow [:room current-room other-index])]
-    (cond ;; Don't move into an occupied position.
-          (not (nil? (get-in burrow position)))
-          false
-          ;; Don't leave home if you don't need to.
-          (and (= 0 current-room-index)
-               (= (amphipod->room amphipod) current-room))
-          false
-          ;; No need to get out of the way if other guy doesn't need to leave
-          (and (= 1 current-room-index)
-               (= (amphipod->room amphipod) (amphipod->room other-occupant) current-room))
-          false
-          ;; Can't move into home of wrong burrow
-          (and (= :room (first position))
-               (not= (amphipod->room amphipod) dest-room))
-          false
-          ;; Can't move into home of right burrow if occupied by wrong amphipod
-          (and (= :room (first position))
-               (not-every? (fn [occupant]
-                             (or (nil? occupant)
-                                 (= (amphipod->room amphipod)
-                                    (amphipod->room occupant))))
-                           [(get-in burrow [:room dest-room 0])
-                            (get-in burrow [:room dest-room 1])]))
-          false
-          ;; Can't hover in front of own room.
-          (and (= :hallway (first position))
-               (= (second position)
-                  (room-position (amphipod->room amphipod))))
-          false
-          ;; No one can be in the way.
-          (not (= #{nil} (set (for [p (positions-between current-position
-                                                         position)]
-                                (get-in burrow p)))))
-          false
-          :else
-          true)))
+    (cond
+      (some (fn [[_, move-count]]
+              (< 2 move-count))
+            (some-> journey :move-counts))
+      false
+      ;; Don't move into an occupied position.
+      (not (nil? (get-in burrow position)))
+      false
+      ;; Don't leave home if you don't need to.
+      (and (= 0 current-room-index)
+           (= (amphipod->room amphipod) current-room))
+      false
+      ;; No need to get out of the way if other guy doesn't need to leave
+      (and (= 1 current-room-index)
+           (= (amphipod->room amphipod) (amphipod->room other-occupant) current-room))
+      false
+      ;; Can't move into home of wrong burrow
+      (and (= :room (first position))
+           (not= (amphipod->room amphipod) dest-room))
+      false
+      ;; Can't move into home of right burrow if occupied by wrong amphipod
+      (and (= :room (first position))
+           (not-every? (fn [occupant]
+                         (or (nil? occupant)
+                             (= (amphipod->room amphipod)
+                                (amphipod->room occupant))))
+                       [(get-in burrow [:room dest-room 0])
+                        (get-in burrow [:room dest-room 1])]))
+      false
+      ;; Can't hover in front of own room.
+      (and (= :hallway (first position))
+           (= (second position)
+              (room-position (amphipod->room amphipod))))
+      false
+      ;; No one can be in the way.
+      (not (= #{nil} (set (for [p (positions-between current-position
+                                                     position)]
+                            (get-in burrow p)))))
+      false
+      :else
+      true)))
 
 (defn goal [journey]
   (let [burrow (:burrow journey)
@@ -277,6 +285,7 @@
                     move-position)]
     (-> journey
         (update :moves conj move)
+        (update-in [:move-counts amphipod] (fnil inc 0))
         (update :cost conj move-cost)
         (update :accumulated-cost
                 +
@@ -295,9 +304,11 @@
     journey-next))
 
 (defn journey->breadcrumbs [journey]
-  (assert (= (count (:cost journey))
-             (count (:moves journey)))
-          "Journey cost and moves length mismatch.")
+  (when-not (= (count (:cost journey))
+               (count (:moves journey)))
+            (throw (ex-info "Journey cost and moves length mismatch"
+                            {:cost-length (count (:cost journey))
+                             :moves-length (count (:moves journey))})))
   (string/join (flatten (for [i (range (count (:moves journey)))]
                           ["\n"
                            (str "cost: " (get-in journey [:cost i]))
@@ -314,10 +325,11 @@
         call-count (atom 0)]
     (loop [q queue
            seen #{}]
-      (when (zero? (mod @call-count 1000))
+      (when (zero? (mod @call-count 10000))
         (println "Progress check:" @call-count
                  "queue size:" (count q)
                  "lowest cost:" (:accumulated-cost (peek q))))
+      ;;  (journey->breadcrumbs (peek q))))
       (swap! call-count inc)
       (let [journey-atm (peek q)
             burrow-atm (:burrow journey-atm)]

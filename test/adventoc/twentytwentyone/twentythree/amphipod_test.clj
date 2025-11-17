@@ -199,7 +199,7 @@
 
 (deftest journey-start-test
   (testing "journey-start"
-    (is (= {:accumulated-cost 0, :seen #{}, :burrow {:hallway [nil nil nil nil nil nil nil nil nil nil nil], :room {:A [:A0 :B0], :B [:D1 :C0], :C [:C1 :B1], :D [:A1 :D0]}}, :moves [[:A0 [:room :A 0]] [:B0 [:room :A 1]] [:D1 [:room :B 0]] [:C0 [:room :B 1]] [:C1 [:room :C 0]] [:B1 [:room :C 1]] [:A1 [:room :D 0]] [:D0 [:room :D 1]]]}
+    (is (= {:accumulated-cost 0, :seen #{}, :burrow {:hallway [nil nil nil nil nil nil nil nil nil nil nil], :room {:A [:A0 :B0], :B [:D1 :C0], :C [:C1 :B1], :D [:A1 :D0]}}, :moves [[:A0 [:room :A 0]] [:B0 [:room :A 1]] [:D1 [:room :B 0]] [:C0 [:room :B 1]] [:C1 [:room :C 0]] [:B1 [:room :C 1]] [:A1 [:room :D 0]] [:D0 [:room :D 1]]], :cost [0 0 0 0 0 0 0 0]}
            (core/journey-start (core/journey->burrow journey-start))))))
 
 (deftest goal-test
