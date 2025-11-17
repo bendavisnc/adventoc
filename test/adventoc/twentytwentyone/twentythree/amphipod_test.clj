@@ -4,33 +4,29 @@
    [clojure.string :as string]
    [clojure.test :refer :all]))
 
-(def journey-start (-> {:accumulated-cost 0
-                        :moves [[:A0 [:room :A 0]]
-                                [:B0 [:room :A 1]]
-                                [:D0 [:room :B 0]]
-                                [:C0 [:room :B 1]]
-                                [:C1 [:room :C 0]]
-                                [:B1 [:room :C 1]]
-                                [:A1 [:room :D 0]]
-                                [:D1 [:room :D 1]]]
-                        :seen #{}}
-                       (core/assoc-burrow)))
+(def puzzle (string/join "\n" ["#############"
+                               "#...........#"
+                               "###B#C#B#D###"
+                               "  #A#D#C#A#"
+                               "  #########"]))
 
-(def journey-start-tiny (-> {:accumulated-cost 0
-                             :moves [[:A0 [:room :A 1]]
-                                     [:B0 [:room :A 0]]
-                                     [:B1 [:room :B 1]]
-                                     [:A1 [:room :B 0]]]
-                             :seen #{}}
-                            (core/assoc-burrow)))
+(def puzzle-tiny (string/join "\n" ["#############"
+                                    "#...........#"
+                                    "###B#A#.#.###"
+                                    "  #A#B#.#.#"
+                                    "  #########"]))
+
+(def journey-start (core/journey-start (core/str->burrow puzzle)))
+
+(def journey-start-tiny (core/journey-start (core/str->burrow puzzle-tiny)))
 
 (deftest journey-to-burrow-test
   (testing "journey->burrow"
     (is (= {:hallway [nil nil nil nil nil nil nil nil nil nil nil]
             :room {:A [:A0 :B0]
-                   :B [:D0 :C0]
+                   :B [:D1 :C0]
                    :C [:C1 :B1]
-                   :D [:A1 :D1]}}
+                   :D [:A1 :D0]}}
            (core/journey->burrow journey-start)))))
 
 (deftest distance-test
@@ -175,39 +171,35 @@
     (binding [core/rooms (take 2 core/rooms)]
       (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
       (let [journeys (core/journeys-afresh journey-start-tiny)]
-        (is (= 12 (count journeys)))))
+        (is (= 24 (count journeys)))))
     (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)))
-
-(deftest burrow->str-test
-  (testing "burrow->str"
-    (let [s (core/burrow->str (core/journey->burrow journey-start))]
-      (is (= (string/join "\n"
-               ["#############"
-                "#...........#"
-                "###B#C#B#D###"
-                "  #A#D#C#A#"
-                "  #########"])
-             s))))
-  (testing "burrow->str (tiny burrow)"
-    (let [s (core/burrow->str (core/journey->burrow journey-start-tiny))]
-      (is (= (string/join "\n"
-               ["#############"
-                "#...........#"
-                "###A#B#.#.###"
-                "  #B#A#.#.#"
-                "  #########"])
-             s)))))
 
 (deftest str->burrow-test
   (testing "str->burrow"
-    (let [s (core/burrow->str (core/journey->burrow journey-start))]
-      (is (= {:hallway [nil nil nil nil nil nil nil nil nil nil nil]
-              :room {:A [:B0 :A0], :B [:C0 :D1], :C [:B1 :C1], :D [:D0 :A1]}}
-             (core/str->burrow s))))))
+    (is (= {:hallway [nil nil nil nil nil nil nil nil nil nil nil]
+            :room {:A [:A0 :B0], :B [:D1 :C0], :C [:C1 :B1], :D [:A1 :D0]}}
+           (core/str->burrow puzzle))))
+  (binding [core/rooms (take 2 core/rooms)]
+    (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
+    (testing "str->burrow, tiny"
+      (is (= {:hallway [nil nil nil nil nil nil nil], :room {:A [:A1 :B0], :B [:B1 :A0]}}
+             (core/str->burrow puzzle-tiny)))))
+  (require 'adventoc.twentytwentyone.twentythree.amphipod :reload))
+
+(deftest burrow->str-test
+  (testing "burrow->str"
+    (is (= puzzle
+           (core/burrow->str (core/str->burrow puzzle)))))
+  (binding [core/rooms (take 2 core/rooms)]
+    (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
+    (testing "burrow->str, tiny"
+      (is (= puzzle-tiny
+            (core/burrow->str (core/str->burrow puzzle-tiny))))))
+  (require 'adventoc.twentytwentyone.twentythree.amphipod :reload))
 
 (deftest journey-start-test
   (testing "journey-start"
-    (is (= 7
+    (is (= {:accumulated-cost 0, :seen #{}, :burrow {:hallway [nil nil nil nil nil nil nil nil nil nil nil], :room {:A [:A0 :B0], :B [:D1 :C0], :C [:C1 :B1], :D [:A1 :D0]}}, :moves [[:A0 [:room :A 0]] [:B0 [:room :A 1]] [:D1 [:room :B 0]] [:C0 [:room :B 1]] [:C1 [:room :C 0]] [:B1 [:room :C 1]] [:A1 [:room :D 0]] [:D0 [:room :D 1]]]}
            (core/journey-start (core/journey->burrow journey-start))))))
 
 (deftest goal-test

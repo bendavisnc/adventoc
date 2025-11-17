@@ -85,15 +85,21 @@
                 [[], #{}]
                 s)
         amphipod-graph (->> amphipods-acc
-                            (partition 4)
+                            (partition (count rooms))
                             (map vec)
                             vec
-                            graph-rows-columns-switch)]
-    (-> burrow-empty
-        (assoc-in [:room :A] (amphipod-graph 0))
-        (assoc-in [:room :B] (amphipod-graph 1))
-        (assoc-in [:room :C] (amphipod-graph 2))
-        (assoc-in [:room :D] (amphipod-graph 3)))))
+                            graph-rows-columns-switch)
+        burrow* (-> burrow-empty
+                    (assoc-in [:room :A] (vec (rseq (amphipod-graph 0))))
+                    (assoc-in [:room :B] (vec (rseq (amphipod-graph 1)))))
+        burrow (if (= 4 (count rooms))
+                 (-> burrow*
+                     (assoc-in [:room :C] (vec (rseq (amphipod-graph 2))))
+                     (assoc-in [:room :D] (vec (rseq (amphipod-graph 3)))))
+                 (-> burrow*
+                     (update :room dissoc :C)
+                     (update :room dissoc :D)))]
+    burrow))
 
 (defn journey-start [burrow]
   {:accumulated-cost 0
@@ -329,4 +335,4 @@
                          journeys-next)
                   (conj seen burrow-atm)))))))))
 
-(comment (keyword (str \A)))
+(comment (rseq [1 2]))
