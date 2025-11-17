@@ -335,4 +335,7 @@
                          journeys-next)
                   (conj seen burrow-atm)))))))))
 
+(defn amphipod [puzzle]
+  (-> puzzle str->burrow journey-start amphipod-solve :accumulated-cost))
+
 (comment (rseq [1 2]))
