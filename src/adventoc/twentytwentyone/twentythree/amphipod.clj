@@ -11,7 +11,7 @@
 (def energys (zipmap rooms (iterate #(* 10 %) 1)))
 
 (def amphipods (apply sorted-set (for [room rooms
-                                       index [0 1]]
+                                       index (range room-size)]
                                    (keyword (str (name room) index)))))
 
 (def hallway-size
@@ -55,23 +55,53 @@
                             name
                             first)
                           "."))]
-    (apply format
-      (flatten ["#############
-#%s%s%s%s%s%s%s%s%s%s%s#
-###%s#%s#%s#%s###
-  #%s#%s#%s#%s#
-  #########"
-                (map (fn [i]
-                       (a-or-period [:hallway i]))
-                     (range 11))
-                (a-or-period [:room :A 1])
-                (a-or-period [:room :B 1])
-                (a-or-period [:room :C 1])
-                (a-or-period [:room :D 1])
-                (a-or-period [:room :A 0])
-                (a-or-period [:room :B 0])
-                (a-or-period [:room :C 0])
-                (a-or-period [:room :D 0])]))))
+    (case room-size
+      2
+      (apply format
+        (flatten [(string/join "\n" ["#############"
+                                     "#%s%s%s%s%s%s%s%s%s%s%s#"
+                                     "###%s#%s#%s#%s###"
+                                     "  #%s#%s#%s#%s#"
+                                     "  #########"])
+                  (map (fn [i]
+                         (a-or-period [:hallway i]))
+                    (range 11))
+                  (a-or-period [:room :A 1])
+                  (a-or-period [:room :B 1])
+                  (a-or-period [:room :C 1])
+                  (a-or-period [:room :D 1])
+                  (a-or-period [:room :A 0])
+                  (a-or-period [:room :B 0])
+                  (a-or-period [:room :C 0])
+                  (a-or-period [:room :D 0])]))
+      4
+      (apply format
+        (flatten [(string/join "\n" ["#############"
+                                     "#%s%s%s%s%s%s%s%s%s%s%s#"
+                                     "###%s#%s#%s#%s###"
+                                     "  #%s#%s#%s#%s#"
+                                     "  #%s#%s#%s#%s#"
+                                     "  #%s#%s#%s#%s#"
+                                     "  #########"])
+                  (map (fn [i]
+                         (a-or-period [:hallway i]))
+                    (range 11))
+                  (a-or-period [:room :A 3])
+                  (a-or-period [:room :B 3])
+                  (a-or-period [:room :C 3])
+                  (a-or-period [:room :D 3])
+                  (a-or-period [:room :A 2])
+                  (a-or-period [:room :B 2])
+                  (a-or-period [:room :C 2])
+                  (a-or-period [:room :D 2])
+                  (a-or-period [:room :A 1])
+                  (a-or-period [:room :B 1])
+                  (a-or-period [:room :C 1])
+                  (a-or-period [:room :D 1])
+                  (a-or-period [:room :A 0])
+                  (a-or-period [:room :B 0])
+                  (a-or-period [:room :C 0])
+                  (a-or-period [:room :D 0])])))))
 
 (defn graph-rows-columns-switch [graph]
   (vec (for [row-i (range (count (first graph)))]
@@ -189,12 +219,14 @@
                                     (if (= :hallway (first to))
                                       hallway-to-index
                                       (inc hallway-to-index)))))
-            from-room-position (when (= [:room 0] [(first from) (last from)])
-                                 [[:room (second from) 1]])
-            to-room-position (when (= [:room 0] [(first to) (last to)])
-                               [[:room (second to) 1]])]
+            from-room-positions (when (= :room (first from))
+                                  (vec (for [i (range (inc (last from)) room-size)]
+                                         [:room (second from) i])))
+            to-room-positions (when (= :room (first to))
+                                (vec (for [i (range (inc (last to)) room-size)]
+                                       [:room (second to) i])))]
         (if is-left-to-right?
-          (concat from-room-position hallway-positions to-room-position)
+          (concat from-room-positions hallway-positions to-room-positions)
           (reverse (positions-between to from)))))))
 
 (defn can-move? [journey, amphipod position]
@@ -202,8 +234,8 @@
         [_ current-position] (move-most-recent amphipod (:moves journey))
         [current-room, current-room-index] (when (= :room (first current-position))
                                              (rest current-position))
-        [dest-room, _] (when (= :room (first position))
-                         (rest position))]
+        [dest-room, dest-room-index] (when (= :room (first position))
+                                       (rest position))]
     (cond
       ;; Don't move into an occupied position.
       (not (nil? (get-in burrow position)))
@@ -225,7 +257,13 @@
                        (for [index (range room-size)]
                          (get-in burrow [:room dest-room index]))))
       false
-      ;; ;; No need to get out of the way if other guy doesn't need to leave
+      ;; Don't settle down in front of empty spots
+      (and (= :room (first position))
+           (some nil?
+             (for [index (range dest-room-index)]
+               (get-in burrow [:room dest-room index]))))
+      false
+      ;; No need to get out of the way if other guy doesn't need to leave
       (and (= current-room (amphipod->room amphipod))
            (every? (fn [occupant]
                      (or (nil? occupant)

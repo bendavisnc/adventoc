@@ -16,6 +16,14 @@
                                     "  #A#B#.#.#"
                                     "  #########"]))
 
+(def puzzle-large (string/join "\n" ["#############"
+                                     "#...........#"
+                                     "###B#C#B#D###"
+                                     "  #D#C#B#A#"
+                                     "  #D#B#A#C#"
+                                     "  #A#D#C#A#"
+                                     "  #########"]))
+
 (def journey-start (core/journey-start (core/str->burrow puzzle)))
 
 (def journey-start-tiny (core/journey-start (core/str->burrow puzzle-tiny)))
@@ -146,6 +154,12 @@
                         :A0
                         [:room :A 1])]
       (is (= false valid-move?))))
+  (testing "can-move? (not into home burrow, if bottom positions are free)"
+    (let [valid-move? (core/can-move?
+                        (core/assoc-burrow {:accumulated-cost 0, :moves [[:A0 [:hallway 0]]]})
+                        :A0
+                        [:room :A 1])]
+      (is (= false valid-move?))))
   (testing "can-move? (not in front of own base, tiny)"
     (binding [core/rooms (take 2 core/rooms)]
       (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
@@ -182,8 +196,16 @@
   (binding [core/rooms (take 2 core/rooms)]
     (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
     (testing "str->burrow, tiny"
-      (is (= {:hallway [nil nil nil nil nil nil nil], :room {:A [:A1 :B0], :B [:B1 :A0]}}
+      (is (= {:hallway [nil nil nil nil nil nil nil]
+              :room {:A [:A1 :B0], :B [:B1 :A0]}}
              (core/str->burrow puzzle-tiny)))))
+  (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
+  (binding [core/room-size 4]
+    (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
+    (testing "str->burrow, large"
+      (is (= {:hallway [nil nil nil nil nil nil nil nil nil nil nil]
+              :room {:A [:A2 :D2 :D1 :B0], :B [:D3 :B3 :C1 :C0], :C [:C3 :A1 :B2 :B1], :D [:A3 :C2 :A0 :D0]}}
+             (core/str->burrow puzzle-large)))))
   (require 'adventoc.twentytwentyone.twentythree.amphipod :reload))
 
 (deftest burrow->str-test
@@ -195,12 +217,28 @@
     (testing "burrow->str, tiny"
       (is (= puzzle-tiny
             (core/burrow->str (core/str->burrow puzzle-tiny))))))
+  (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
+  (binding [core/room-size 4]
+    (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
+    (testing "burrow->str, large"
+      (is (= puzzle-large
+            (core/burrow->str (core/str->burrow puzzle-large))))))
   (require 'adventoc.twentytwentyone.twentythree.amphipod :reload))
 
 (deftest journey-start-test
   (testing "journey-start"
     (is (= {:accumulated-cost 0, :seen #{}, :burrow {:hallway [nil nil nil nil nil nil nil nil nil nil nil], :room {:A [:A0 :B0], :B [:D1 :C0], :C [:C1 :B1], :D [:A1 :D0]}}, :moves [[:A0 [:room :A 0]] [:B0 [:room :A 1]] [:D1 [:room :B 0]] [:C0 [:room :B 1]] [:C1 [:room :C 0]] [:B1 [:room :C 1]] [:A1 [:room :D 0]] [:D0 [:room :D 1]]], :cost [0 0 0 0 0 0 0 0]}
-           (core/journey-start (core/journey->burrow journey-start))))))
+           (core/journey-start (core/journey->burrow journey-start))))
+    (is (= puzzle
+           (core/burrow->str (core/journey->burrow (core/journey-start (core/journey->burrow (core/journey-start (core/str->burrow puzzle)))))))))
+  (binding [core/room-size 4]
+    (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
+    (testing "journey-start, large"
+      (is (= {:accumulated-cost 0, :seen #{}, :burrow {:hallway [nil nil nil nil nil nil nil nil nil nil nil], :room {:A [:A2 :D2 :D1 :B0], :B [:D3 :B3 :C1 :C0], :C [:C3 :A1 :B2 :B1], :D [:A3 :C2 :A0 :D0]}}, :moves [[:A2 [:room :A 0]] [:D2 [:room :A 1]] [:D1 [:room :A 2]] [:B0 [:room :A 3]] [:D3 [:room :B 0]] [:B3 [:room :B 1]] [:C1 [:room :B 2]] [:C0 [:room :B 3]] [:C3 [:room :C 0]] [:A1 [:room :C 1]] [:B2 [:room :C 2]] [:B1 [:room :C 3]] [:A3 [:room :D 0]] [:C2 [:room :D 1]] [:A0 [:room :D 2]] [:D0 [:room :D 3]]], :cost [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]}
+             (core/journey-start (core/journey->burrow (core/journey-start (core/str->burrow puzzle-large))))))
+      (is (= puzzle-large
+             (core/burrow->str (core/journey->burrow (core/journey-start (core/journey->burrow (core/journey-start (core/str->burrow puzzle-large))))))))))
+  (require 'adventoc.twentytwentyone.twentythree.amphipod :reload))
 
 (deftest goal-test
   (testing "goal"
