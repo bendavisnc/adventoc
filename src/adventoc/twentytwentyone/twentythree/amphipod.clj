@@ -187,10 +187,10 @@
         other-index ({0 1 1 0} current-room-index)
         other-occupant (get-in burrow [:room current-room other-index])]
     (cond
-      (some (fn [[_, move-count]]
-              (< 2 move-count))
-            (some-> journey :move-counts))
-      false
+      ;; (some (fn [[_, move-count]]
+      ;;         (< 2 move-count))
+      ;;       (some-> journey :move-counts))
+      ;; false
       ;; Don't move into an occupied position.
       (not (nil? (get-in burrow position)))
       false
@@ -215,10 +215,11 @@
                        [(get-in burrow [:room dest-room 0])
                         (get-in burrow [:room dest-room 1])]))
       false
-      ;; Can't hover in front of own room.
+      ;; Can't hover in front of any room.
       (and (= :hallway (first position))
-           (= (second position)
-              (room-position (amphipod->room amphipod))))
+           (some (fn [hallway-entry-index]
+                   (= (second position) hallway-entry-index))
+                 (vals room-position)))
       false
       ;; No one can be in the way.
       (not (= #{nil} (set (for [p (positions-between current-position
@@ -309,7 +310,8 @@
             (throw (ex-info "Journey cost and moves length mismatch"
                             {:cost-length (count (:cost journey))
                              :moves-length (count (:moves journey))})))
-  (string/join (flatten (for [i (range (count (:moves journey)))]
+  (string/join (flatten (for [i (range (count (:moves journey)))
+                              :when (pos-int? (get-in journey [:cost i]))]
                           ["\n"
                            (str "cost: " (get-in journey [:cost i]))
                            "\n"
@@ -325,15 +327,19 @@
         call-count (atom 0)]
     (loop [q queue
            seen #{}]
-      (when (zero? (mod @call-count 10000))
+      (when (zero? (mod @call-count 100000))
         (println "Progress check:" @call-count
                  "queue size:" (count q)
-                 "lowest cost:" (:accumulated-cost (peek q))))
-      ;;  (journey->breadcrumbs (peek q))))
+                 "lowest cost:" (:accumulated-cost (peek q))
+                 "step size:" (count (:moves (peek q)))
+                 (journey->breadcrumbs (peek q))))
       (swap! call-count inc)
       (let [journey-atm (peek q)
             burrow-atm (:burrow journey-atm)]
-        (if (seen burrow-atm)
+        (if (or (seen burrow-atm)
+                (some (fn [[_, move-count]]
+                        (< 2 move-count))
+                      (some-> journey-atm :move-counts)))
           (recur (pop q) seen)
           (let [journey-success (goal journey-atm)
                 journeys-next (for [j (journeys-afresh journey-atm)
