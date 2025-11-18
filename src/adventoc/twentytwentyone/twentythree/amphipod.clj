@@ -20,11 +20,17 @@
     4 11
     (throw (ex-info (str "Unknown hallway size for " (count rooms) " rooms") {:rooms rooms}))))
 
-(def burrow-empty {:hallway (vec (repeat hallway-size nil))
-                   :room {:A (vec (repeat room-size nil))
-                          :B (vec (repeat room-size nil))
-                          :C (vec (repeat room-size nil))
-                          :D (vec (repeat room-size nil))}})
+(def burrow-empty (case (count rooms)
+                    2
+                    {:hallway (vec (repeat hallway-size nil))
+                     :room {:A (vec (repeat room-size nil))
+                            :B (vec (repeat room-size nil))}}
+                    4
+                    {:hallway (vec (repeat hallway-size nil))
+                     :room {:A (vec (repeat room-size nil))
+                            :B (vec (repeat room-size nil))
+                            :C (vec (repeat room-size nil))
+                            :D (vec (repeat room-size nil))}}))
 
 (def move-placements (concat
                        (map #(vector :hallway %) (range hallway-size))
@@ -92,25 +98,37 @@
                             (map vec)
                             vec
                             graph-rows-columns-switch)
-        burrow* (-> burrow-empty
-                    (assoc-in [:room :A] (vec (rseq (amphipod-graph 0))))
-                    (assoc-in [:room :B] (vec (rseq (amphipod-graph 1)))))
-        burrow (if (= 4 (count rooms))
-                 (-> burrow*
+        burrow (case (count rooms)
+                 2
+                 (-> burrow-empty
+                     (assoc-in [:room :A] (vec (rseq (amphipod-graph 0))))
+                     (assoc-in [:room :B] (vec (rseq (amphipod-graph 1)))))
+                 4
+                 (-> burrow-empty
+                     (assoc-in [:room :A] (vec (rseq (amphipod-graph 0))))
+                     (assoc-in [:room :B] (vec (rseq (amphipod-graph 1))))
                      (assoc-in [:room :C] (vec (rseq (amphipod-graph 2))))
-                     (assoc-in [:room :D] (vec (rseq (amphipod-graph 3)))))
-                 (-> burrow*
-                     (update :room dissoc :C)
-                     (update :room dissoc :D)))]
+                     (assoc-in [:room :D] (vec (rseq (amphipod-graph 3))))))]
     burrow))
 
 (defn journey-start [burrow]
-  (let [moves (reduce (fn [acc, [room [occ-a, occ-b]]]
-                        (-> acc
-                            (conj [occ-a [:room room 0]])
-                            (conj [occ-b [:room room 1]])))
-                      []
-                      (:room burrow))]
+  (let [moves (case room-size
+                2
+                (reduce (fn [acc, [room [occ-a, occ-b]]]
+                          (-> acc
+                              (conj [occ-a [:room room 0]])
+                              (conj [occ-b [:room room 1]])))
+                        []
+                        (:room burrow))
+                4
+                (reduce (fn [acc, [room [occ-a, occ-b, occ-c, occ-d]]]
+                          (-> acc
+                              (conj [occ-a [:room room 0]])
+                              (conj [occ-b [:room room 1]])
+                              (conj [occ-c [:room room 2]])
+                              (conj [occ-d [:room room 3]])))
+                        []
+                        (:room burrow)))]
     {:accumulated-cost 0
      :seen #{}
      :burrow burrow
@@ -257,20 +275,20 @@
                            [:room :hallway]
                            (let [[_ room, room-index] from
                                  hallway-room-index (room room-position)
-                                 back-room (if (zero? room-index) 1 0)]
-                             (+ back-room 1 (distance [:hallway hallway-room-index] to)))
+                                 room-distance (- room-size room-index 1)]
+                             (+ room-distance 1 (distance [:hallway hallway-room-index] to)))
                            [:hallway :room]
                            (distance to from)
                            [:room :room]
                            (let [[_ room-from, room-from-index] from
                                  hallway-from-room-index (room-from room-position)
-                                 back-from-room (if (zero? room-from-index) 1 0)
+                                 from-room-distance (- room-size room-from-index 1)
                                  [_ room-to, room-to-index] to
                                  hallway-to-room-index (room-to room-position)
-                                 back-to-room (if (zero? room-to-index) 1 0)]
+                                 to-room-distance (- room-size room-to-index 1)]
                              (if (= room-from room-to)
                                (Math/abs (- room-from-index room-to-index))
-                               (+ back-from-room 1 back-to-room 1 (distance [:hallway hallway-from-room-index] [:hallway hallway-to-room-index]))))
+                               (+ from-room-distance 1 to-room-distance 1 (distance [:hallway hallway-from-room-index] [:hallway hallway-to-room-index]))))
                            (throw (ex-info (str "Unknown distance for from " from " to " to) {:from from :to to}))))))
 
 (defn cost [amphipod from, to]
