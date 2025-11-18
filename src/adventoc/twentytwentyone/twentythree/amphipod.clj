@@ -2,10 +2,11 @@
   (:require
    [clojure.core :exclude [name]]
    [clojure.string :as string]
-   [clojure.string :as str]
    [shams.priority-queue :as pq]))
 
 (def ^:dynamic rooms [:A :B :C :D])
+
+(def ^:dynamic room-size 2)
 
 (def energys (zipmap rooms (iterate #(* 10 %) 1)))
 
@@ -20,14 +21,15 @@
     (throw (ex-info (str "Unknown hallway size for " (count rooms) " rooms") {:rooms rooms}))))
 
 (def burrow-empty {:hallway (vec (repeat hallway-size nil))
-                   :room {:A [nil, nil]
-                          :B [nil, nil]
-                          :C [nil, nil]
-                          :D [nil, nil]}})
+                   :room {:A (vec (repeat room-size nil))
+                          :B (vec (repeat room-size nil))
+                          :C (vec (repeat room-size nil))
+                          :D (vec (repeat room-size nil))}})
 
-(def move-placements (concat (map #(vector :hallway %) (range hallway-size))
+(def move-placements (concat
+                       (map #(vector :hallway %) (range hallway-size))
                        (for [room rooms
-                             depth [0 1]]
+                             depth (range room-size)]
                          [:room room depth])))
 
 (def room-position
@@ -183,24 +185,14 @@
         [current-room, current-room-index] (when (= :room (first current-position))
                                              (rest current-position))
         [dest-room, _] (when (= :room (first position))
-                         (rest position))
-        other-index ({0 1 1 0} current-room-index)
-        other-occupant (get-in burrow [:room current-room other-index])]
+                         (rest position))]
     (cond
-      ;; (some (fn [[_, move-count]]
-      ;;         (< 2 move-count))
-      ;;       (some-> journey :move-counts))
-      ;; false
       ;; Don't move into an occupied position.
       (not (nil? (get-in burrow position)))
       false
       ;; Don't leave home if you don't need to.
       (and (= 0 current-room-index)
            (= (amphipod->room amphipod) current-room))
-      false
-      ;; No need to get out of the way if other guy doesn't need to leave
-      (and (= 1 current-room-index)
-           (= (amphipod->room amphipod) (amphipod->room other-occupant) current-room))
       false
       ;; Can't move into home of wrong burrow
       (and (= :room (first position))
@@ -212,8 +204,17 @@
                          (or (nil? occupant)
                              (= (amphipod->room amphipod)
                                 (amphipod->room occupant))))
-                       [(get-in burrow [:room dest-room 0])
-                        (get-in burrow [:room dest-room 1])]))
+                       (for [index (range room-size)]
+                         (get-in burrow [:room dest-room index]))))
+      false
+      ;; ;; No need to get out of the way if other guy doesn't need to leave
+      (and (= current-room (amphipod->room amphipod))
+           (every? (fn [occupant]
+                     (or (nil? occupant)
+                         (= (amphipod->room amphipod)
+                            (amphipod->room occupant))))
+             (for [index (range room-size)]
+               (get-in burrow [:room current-room index]))))
       false
       ;; Can't hover in front of any room.
       (and (= :hallway (first position))
