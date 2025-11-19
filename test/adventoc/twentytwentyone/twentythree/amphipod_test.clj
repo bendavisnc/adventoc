@@ -108,6 +108,12 @@
                         (core/assoc-burrow {:accumulated-cost 0, :moves [[:B0 [:hallway 0]], [:A0 [:room :B 0]]]})
                         :A0
                         [:hallway 0])]
+      (is (= false valid-move?))))
+  (testing "can-move? (not back and forth in the hallway)"
+    (let [valid-move? (core/can-move?
+                        (core/assoc-burrow {:accumulated-cost 0, :moves [[:A0 [:hallway 0]]]})
+                        :A0
+                        [:hallway 3])]
       (is (= false valid-move?)))
     (let [valid-move? (core/can-move?
                         (core/assoc-burrow {:accumulated-cost 0, :moves [[:A0 [:room :B 0]]]})
@@ -242,26 +248,43 @@
 
 (deftest goal-test
   (testing "goal"
-    (let [journey-success (-> journey-start
-                              (update :moves conj [:A0 [:room :A 0]])
-                              (update :moves conj [:A1 [:room :A 1]])
-                              (update :moves conj [:B0 [:room :B 0]])
-                              (update :moves conj [:B1 [:room :B 1]])
-                              (update :moves conj [:C0 [:room :C 0]])
-                              (update :moves conj [:C1 [:room :C 1]])
-                              (update :moves conj [:D0 [:room :D 0]])
-                              (update :moves conj [:D1 [:room :D 1]])
-                              (core/assoc-burrow))
-          goal (core/goal journey-success)]
+    (let [goal (core/goal (-> puzzle core/str->burrow core/journey-start))]
+      (is (= false (boolean goal))))
+    (let [puzzle-solved (string/join "\n" ["#############"
+                                           "#...........#"
+                                           "###A#B#C#D###"
+                                           "  #A#B#C#D#"
+                                           "  #########"])
+          goal (core/goal (-> puzzle-solved core/str->burrow core/journey-start))]
       (is (= true (boolean goal)))))
-  (testing "goal (smaller burrow)"
-    (let [journey-success (core/assoc-burrow {:accumulated-cost 0
-                                              :moves [[:A0 [:room :A 0]]
-                                                      [:A1 [:room :A 1]]
-                                                      [:B0 [:room :B 0]]
-                                                      [:B1 [:room :B 1]]]})
-          goal (core/goal journey-success)]
-      (is (= true (boolean goal))))))
+  (binding [core/rooms (take 2 core/rooms)]
+    (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
+    (testing "goal (smaller burrow)"
+      (let [goal (core/goal (-> puzzle-tiny core/str->burrow core/journey-start))]
+        (is (= false (boolean goal))))
+      (let [puzzle-solved (string/join "\n" ["#############"
+                                             "#...........#"
+                                             "###A#B#.#.###"
+                                             "  #A#B#.#.#"
+                                             "  #########"])
+            goal (core/goal (-> puzzle-solved core/str->burrow core/journey-start))]
+        (is (= true (boolean goal))))))
+  (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
+  (binding [core/room-size 4]
+    (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
+    (testing "goal (large burrow)"
+      (let [goal (core/goal (-> puzzle-tiny core/str->burrow core/journey-start))]
+        (is (= false (boolean goal))))
+      (let [puzzle-solved (string/join "\n" ["#############"
+                                             "#...........#"
+                                             "###A#B#C#D###"
+                                             "  #A#B#C#D#"
+                                             "  #A#B#C#D#"
+                                             "  #A#B#C#D#"
+                                             "  #########"])
+            goal (core/goal (-> puzzle-solved core/str->burrow core/journey-start))]
+        (is (= true (boolean goal))))))
+  (require 'adventoc.twentytwentyone.twentythree.amphipod :reload))
 
 (deftest queue-test
   (testing "queue"

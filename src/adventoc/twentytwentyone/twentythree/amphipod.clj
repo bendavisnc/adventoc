@@ -240,9 +240,8 @@
       ;; Don't move into an occupied position.
       (not (nil? (get-in burrow position)))
       false
-      ;; Don't leave home if you don't need to.
-      (and (= 0 current-room-index)
-           (= (amphipod->room amphipod) current-room))
+      ;; Don't move from hallway to hallway
+      (not (or current-room dest-room))
       false
       ;; Can't move into home of wrong burrow
       (and (= :room (first position))
@@ -289,16 +288,13 @@
 (defn goal [journey]
   (let [burrow (:burrow journey)
         hallway-empty? (= #{nil} (set (get burrow :hallway)))
-        amphipods-all-home? (reduce
-                              (fn [a, b] (and a b))
-                              (map (fn [amphipod]
-                                     (let [last-move (move-most-recent amphipod (:moves journey))
-                                           move-position (second last-move)
-                                           amphipod-room (when (= :room (first move-position))
-                                                           (second move-position))
-                                           home? (= (amphipod->room amphipod) amphipod-room)]
-                                       home?))
-                                   (set (map first (:moves journey)))))]
+        amphipods-all-home? (= (case (count rooms)
+                                 2
+                                 [#{:A} #{:B}]
+                                 4
+                                 [#{:A} #{:B} #{:C} #{:D}])
+                               (for [room rooms]
+                                 (set (map amphipod->room (get-in burrow [:room room])))))]
     (when (and hallway-empty? amphipods-all-home?)
       journey)))
 
@@ -393,10 +389,10 @@
       (swap! call-count inc)
       (let [journey-atm (peek q)
             burrow-atm (:burrow journey-atm)]
-        (if (or (seen burrow-atm)
-                (some (fn [[_, move-count]]
-                        (< 2 move-count))
-                      (some-> journey-atm :move-counts)))
+        (if (or (seen burrow-atm))
+                ;; (some (fn [[_, move-count]]
+                ;;         (< 2 move-count))
+                ;;       (some-> journey-atm :move-counts)))
           (recur (pop q) seen)
           (let [journey-success (goal journey-atm)
                 journeys-next (for [j (journeys-afresh journey-atm)
@@ -411,6 +407,8 @@
                   (conj seen burrow-atm)))))))))
 
 (defn amphipod [puzzle]
-  (-> puzzle str->burrow journey-start amphipod-solve :accumulated-cost))
+  (let [solved (-> puzzle str->burrow journey-start amphipod-solve)]
+    (println (journey->breadcrumbs solved))
+    (:accumulated-cost solved)))
 
 (comment (rseq [1 2]))
