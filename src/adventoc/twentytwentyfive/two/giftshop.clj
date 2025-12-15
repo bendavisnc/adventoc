@@ -3,14 +3,27 @@
    [clojure.string :as string]))
 
 (defn is-valid? [id]
-  (if (>= 1 (count id))
-    true
-    (as-> id $
-      [(subs id 0 (quot (count id) 2))
-       (subs id (quot (count id) 2))]
-      (set $)
-      (count $)
-      (not= 1 $))))
+  (assert (<= 2 (count id)) "Expected id to be longer than a character.")
+  (->
+    [(subs id 0 (quot (count id) 2))
+     (subs id (quot (count id) 2))]
+    set
+    count
+    (not= 1)))
+
+(defn multiples [n]
+  (for [i (range 1 (inc (quot n 2)))
+        :when (zero? (mod n i))]
+    i))
+
+(defn is-valid-loosened-edition? [id]
+  (boolean (not (some (fn [n]
+                        (->> id
+                             (partition n)
+                             set
+                             count
+                             (= 1)))
+                      (multiples (count id))))))
 
 (defn input->ids [input]
   (let [ranges-s (string/split input #",")
@@ -26,9 +39,15 @@
         ids (map str ids-n)]
     ids))
 
-(defn giftshop [input]
-  (let [ids (input->ids input)
-        invalid-ids (filter (comp not is-valid?) ids)
-        sum (apply + (map Long/parseLong invalid-ids))]
-    sum))
+(defn giftshop
+  ([input {:keys [atleast-two?]}]
+   (let [ids (input->ids input)
+         is-valid?' (if atleast-two? is-valid-loosened-edition? is-valid?)
+         invalid-ids (filter (comp not is-valid?')
+                             ids)
+         sum (apply + (map Long/parseLong invalid-ids))]
+     sum))
+
+  ([input]
+   (giftshop input {:atleast-two? false})))
 
