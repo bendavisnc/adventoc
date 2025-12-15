@@ -12,7 +12,7 @@
       (count $)
       (not= 1 $))))
 
-(defn giftshop [input]
+(defn input->ids [input]
   (let [ranges-s (string/split input #",")
         ranges (map (fn [s]
                       (as-> s s*
@@ -23,7 +23,11 @@
         ids-n (mapcat (fn [[s, e]]
                         (range s (inc e)))
                       ranges)
-        ids (map str ids-n)
+        ids (map str ids-n)]
+    ids))
+
+(defn giftshop [input]
+  (let [ids (input->ids input)
         invalid-ids (filter (comp not is-valid?) ids)
         sum (apply + (map Long/parseLong invalid-ids))]
     sum))
