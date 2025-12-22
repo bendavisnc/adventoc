@@ -50,4 +50,3 @@
 
   ([input]
    (giftshop input {:atleast-two? false})))
-
