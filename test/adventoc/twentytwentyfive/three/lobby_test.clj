@@ -17,3 +17,16 @@
            (core/batterybank->joltage "123912391238")))
     (is (= 99
            (core/batterybank->joltage "822144153333552393423468473433384235233463821334445547231435453323133344255983343614331222232859382")))))
+
+(deftest batterybank->joltage-test-extended-length
+  (testing "batterybank->joltage at length greater than two"
+    (is (= 987654321111
+           (core/batterybank->joltage "987654321111111" 12)))
+    (is (= 434234234278
+           (core/batterybank->joltage "234234234234278" 12)))
+    (is (= 811111111119
+           (core/batterybank->joltage "811111111111119" 12)))
+    (is (= 888911112111
+           (core/batterybank->joltage "818181911112111" 12)))
+    (is (= 123912391238
+           (core/batterybank->joltage "123912391238" 12)))))
