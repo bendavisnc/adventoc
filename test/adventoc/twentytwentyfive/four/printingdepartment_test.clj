@@ -39,3 +39,25 @@
                                                  "@.@.@@@.@."]))
           counts (core/adjacency-counts graph)]
       (is (= 13 (core/counts-no-more-than graph counts 4))))))
+
+(deftest graph-next-test
+  (testing "graph-next"
+    (let [graph (core/input->graph (string/join "\n"
+                                                ["..@@.@@@@."
+                                                 "@@@.@.@.@@"
+                                                 "@@@@@.@.@@"
+                                                 "@.@@@@..@."
+                                                 "@@.@@@@.@@"
+                                                 ".@@@@@@@.@"
+                                                 ".@.@.@.@@@"
+                                                 "@.@@@.@@@@"
+                                                 ".@@@@@@@@."
+                                                 "@.@.@@@.@."]))
+          counts (core/adjacency-counts graph)
+          graph-next (core/graph-next graph counts 4)
+          counts-next (core/adjacency-counts graph-next)
+          _ (is (= 12 (core/counts-no-more-than graph-next counts-next 4)))
+          graph-next-next (core/graph-next graph-next counts-next 4)
+          counts-next-next (core/adjacency-counts graph-next-next)
+          _ (is (= 7 (core/counts-no-more-than graph-next-next counts-next-next 4)))]
+      nil)))
