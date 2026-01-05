@@ -6,11 +6,11 @@
 
 (deftest occupied?-test
   (testing "occupied?"
-    (let [graph (core/input->graph (string/join "\n"
-                                                ["@.@"
-                                                 "@@@"]))]
-      (is (core/occupied? graph [0 0]))
-      (is (not (core/occupied? graph [1, 0]))))))
+    (let [grid (core/input->grid (string/join "\n"
+                                   ["@.@"
+                                    "@@@"]))]
+      (is (core/occupied? grid [0 0]))
+      (is (not (core/occupied? grid [1, 0]))))))
 
 (deftest adjacencies-test
   (testing "adjacencies"
@@ -26,38 +26,38 @@
 
 (deftest counts-no-more-than-test
   (testing "counts-no-more-than"
-    (let [graph (core/input->graph (string/join "\n"
-                                                ["..@@.@@@@."
-                                                 "@@@.@.@.@@"
-                                                 "@@@@@.@.@@"
-                                                 "@.@@@@..@."
-                                                 "@@.@@@@.@@"
-                                                 ".@@@@@@@.@"
-                                                 ".@.@.@.@@@"
-                                                 "@.@@@.@@@@"
-                                                 ".@@@@@@@@."
-                                                 "@.@.@@@.@."]))
-          counts (core/adjacency-counts graph)]
-      (is (= 13 (core/counts-no-more-than graph counts 4))))))
+    (let [grid (core/input->grid (string/join "\n"
+                                   ["..@@.@@@@."
+                                    "@@@.@.@.@@"
+                                    "@@@@@.@.@@"
+                                    "@.@@@@..@."
+                                    "@@.@@@@.@@"
+                                    ".@@@@@@@.@"
+                                    ".@.@.@.@@@"
+                                    "@.@@@.@@@@"
+                                    ".@@@@@@@@."
+                                    "@.@.@@@.@."]))
+          counts (core/adjacency-counts grid)]
+      (is (= 13 (core/counts-less-than grid counts core/adjacency-limit))))))
 
-(deftest graph-next-test
-  (testing "graph-next"
-    (let [graph (core/input->graph (string/join "\n"
-                                                ["..@@.@@@@."
-                                                 "@@@.@.@.@@"
-                                                 "@@@@@.@.@@"
-                                                 "@.@@@@..@."
-                                                 "@@.@@@@.@@"
-                                                 ".@@@@@@@.@"
-                                                 ".@.@.@.@@@"
-                                                 "@.@@@.@@@@"
-                                                 ".@@@@@@@@."
-                                                 "@.@.@@@.@."]))
-          counts (core/adjacency-counts graph)
-          graph-next (core/graph-next graph counts 4)
-          counts-next (core/adjacency-counts graph-next)
-          _ (is (= 12 (core/counts-no-more-than graph-next counts-next 4)))
-          graph-next-next (core/graph-next graph-next counts-next 4)
-          counts-next-next (core/adjacency-counts graph-next-next)
-          _ (is (= 7 (core/counts-no-more-than graph-next-next counts-next-next 4)))]
+(deftest grid-next-test
+  (testing "grid-next"
+    (let [grid (core/input->grid (string/join "\n"
+                                   ["..@@.@@@@."
+                                    "@@@.@.@.@@"
+                                    "@@@@@.@.@@"
+                                    "@.@@@@..@."
+                                    "@@.@@@@.@@"
+                                    ".@@@@@@@.@"
+                                    ".@.@.@.@@@"
+                                    "@.@@@.@@@@"
+                                    ".@@@@@@@@."
+                                    "@.@.@@@.@."]))
+          counts (core/adjacency-counts grid)
+          grid-next (core/grid-next grid counts core/adjacency-limit)
+          counts-next (core/adjacency-counts grid-next)
+          _ (is (= 12 (core/counts-less-than grid-next counts-next core/adjacency-limit)))
+          grid-next-next (core/grid-next grid-next counts-next core/adjacency-limit)
+          counts-next-next (core/adjacency-counts grid-next-next)
+          _ (is (= 7 (core/counts-less-than grid-next-next counts-next-next core/adjacency-limit)))]
       nil)))

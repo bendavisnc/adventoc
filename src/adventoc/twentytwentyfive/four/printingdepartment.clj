@@ -6,18 +6,26 @@
 
 (def paperroll-absent \.)
 
-(defn occupied? [graph, [x, y]]
-  (boolean (#{paperroll} (get-in graph [y, x]))))
+(def adjacency-limit 3)
 
-(defn adjacencies [[x y], [x-max, y-max]]
-  (->> (for [dx [-1 0 1]
-             dy [-1 0 1]
-             :when (not (and (= dx 0) (= dy 0)))]
-         [(+ x dx) (+ y dy)])
-       (filter (fn [[x', y']]
-                 (and (<= 0 x' (dec x-max))
-                      (<= 0 y' (dec y-max)))))
-       vec))
+(defn occupied? [grid, [x, y]]
+  (boolean (#{paperroll} (get-in grid [y, x]))))
+
+(defn adjacencies [[x y], [max-x, max-y]]
+  (let [deltas [-1 0 1]]
+    (mapcat
+      (fn [dx]
+        (mapcat
+          (fn [dy]
+            (let [cx (+ x dx)
+                  cy (+ y dy)]
+              (if (and (not (and (= dx 0) (= dy 0)))
+                       (>= cx 0) (< cx max-x)
+                       (>= cy 0) (< cy max-y))
+                [[cx cy]]
+                [])))
+          deltas))
+      deltas)))
 
 (defn increment-adjacents [counts, [x, y], [x-max, y-max]]
   (reduce (fn [acc, [x', y']]
@@ -25,11 +33,11 @@
           counts
           (adjacencies [x, y], [x-max, y-max])))
 
-(defn adjacency-counts [graph]
-  (let [row-size (count (first graph))
-        column-size (count graph)]
+(defn adjacency-counts [grid]
+  (let [row-size (count (first grid))
+        column-size (count grid)]
     (reduce (fn [acc, [x, y]]
-              (if (occupied? graph [x, y])
+              (if (occupied? grid [x, y])
                 (increment-adjacents acc [x, y] [row-size, column-size])
                 acc))
             {}
@@ -37,64 +45,65 @@
                   column (range column-size)]
               [row, column]))))
 
-(defn input->graph [input]
+(defn input->grid [input]
   (vec (for [row (vec (string/split-lines input))]
          (vec row))))
 
-(defn counts-no-more-than [graph, counts, n]
-  (let [row-size (count (first graph))
-        column-size (count graph)]
+(defn counts-less-than [grid, counts, n]
+  (let [row-size (count (first grid))
+        column-size (count grid)]
     (reduce (fn [acc, [x, y]]
               (let [adjacency-count (or (get-in counts [x, y])
                                         0)]
-                (if (< adjacency-count n)
+                (if (<= adjacency-count n)
                   (inc acc)
                   acc)))
             0
             (for [row (range row-size)
                   column (range column-size)
-                  :when (occupied? graph [row, column])]
+                  :when (occupied? grid [row, column])]
               [row, column]))))
 
-(defn graph-next [graph, counts, n]
-  (let [row-size (count (first graph))
-        column-size (count graph)]
+(defn grid-next [grid, counts, n]
+  (let [row-size (count (first grid))
+        column-size (count grid)]
     (reduce (fn [acc, [x, y]]
               (let [adjacency-count (or (get-in counts [x, y])
                                         0)
-                    marker (cond (not (occupied? graph [x, y]))
+                    marker (cond (not (occupied? grid [x, y]))
                                  paperroll-absent
-                                 (< adjacency-count n)
+                                 (<= adjacency-count n)
                                  paperroll-absent
                                  :else
-                                 (get-in graph [y, x]))]
+                                 (get-in grid [y, x]))]
                 (assoc-in acc [y, x] marker)))
             (vec (take row-size (repeat [])))
             (for [row (range row-size)
                   column (range column-size)]
               [row, column]))))
 
-(defn counts-no-more-than-continuous [graph, n]
-  (loop [g graph
+(defn counts-no-more-than-continuous [grid, n]
+  (loop [g grid
          acc 0
          last-count nil]
     (if (> 1 (or last-count ##Inf))
       (+ acc last-count)
       (let [acs (adjacency-counts g)
-            c (counts-no-more-than g acs n)
+            c (counts-less-than g acs n)
             acc-next (+ acc (or last-count 0))
-            g-next (graph-next g acs n)]
+            g-next (grid-next g acs n)]
         (recur g-next acc-next c)))))
 
 (defn printingdepartment
   ([input, {:keys [continuous-removal?]}]
-   (let [graph (input->graph input)]
-     (if continuous-removal?
-       (counts-no-more-than-continuous graph 4)
-       ;; else
-       (let [counts (adjacency-counts graph)
-             significant-adjacents-count (counts-no-more-than graph counts 4)]
-         significant-adjacents-count))))
+   (time
+     (let [grid (input->grid input)]
+       (if continuous-removal?
+         (counts-no-more-than-continuous grid adjacency-limit)
+         ;; else
+         (let [counts (adjacency-counts grid)
+               significant-adjacents-count (counts-less-than grid counts adjacency-limit)]
+           significant-adjacents-count)))))
   ([input]
    (printingdepartment input {})))
 
@@ -107,4 +116,4 @@
 .@.@.@.@@@
 @.@@@.@@@@
 .@@@@@@@@.
-@.@.@@@.@." {:continuous-removal? false}))
+@.@.@@@.@." {:continuous-removal? true}))
