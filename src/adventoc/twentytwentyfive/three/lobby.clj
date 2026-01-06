@@ -1,5 +1,6 @@
 (ns adventoc.twentytwentyfive.three.lobby
   (:require
+   [adventoc.helpers :refer [input]]
    [clojure.string :as string]))
 
 (defn batterybank->joltage
@@ -26,8 +27,14 @@
 
 (defn lobby
   ([input {:keys [joltage-length]}]
-   (apply +
-          (map #(batterybank->joltage % joltage-length)
-               (string/split-lines input))))
+   (time (println
+           (apply +
+                  (map #(batterybank->joltage % joltage-length)
+                       (string/split-lines input))))))
   ([input]
    (lobby input {:joltage-length 2})))
+
+(defn -main [& args]
+  (if (= ["--joltage-length-extended"] args)
+    (lobby (input) {:joltage-length 12})
+    (lobby (input))))

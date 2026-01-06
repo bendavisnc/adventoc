@@ -1,5 +1,6 @@
 (ns adventoc.twentytwentyfive.two.giftshop
   (:require
+   [adventoc.helpers :refer [input]]
    [clojure.string :as string]))
 
 (defn is-valid? [id]
@@ -41,12 +42,18 @@
 
 (defn giftshop
   ([input {:keys [atleast-two?]}]
-   (let [ids (input->ids input)
-         is-valid?' (if atleast-two? is-valid-loosened-edition? is-valid?)
-         invalid-ids (filter (comp not is-valid?')
-                             ids)
-         sum (apply + (map Long/parseLong invalid-ids))]
-     sum))
+   (time (println
+           (let [ids (input->ids input)
+                 is-valid?' (if atleast-two? is-valid-loosened-edition? is-valid?)
+                 invalid-ids (filter (comp not is-valid?')
+                                     ids)
+                 sum (apply + (map Long/parseLong invalid-ids))]
+             sum))))
 
   ([input]
    (giftshop input {:atleast-two? false})))
+
+(defn -main [& args]
+  (if (= ["--atleast-two"] args)
+    (giftshop (input) {:atleast-two? true})
+    (giftshop (input))))

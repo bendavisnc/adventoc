@@ -1,5 +1,6 @@
 (ns adventoc.twentytwentyfive.one.secretentrance
   (:require
+   [adventoc.helpers :refer [input]]
    [clojure.string :as string]))
 
 (def dial-max 99)
@@ -30,11 +31,17 @@
 
 (defn secretentrance
   ([input {:keys [method-click?]}]
-   (let [dialnumbers-start [50]
-         dialsteps (map dialstep->n (string/split-lines input))
-         dialsteps-applied (apply-dialsteps {:numbers dialnumbers-start} dialsteps)]
-     (if method-click?
-       (:zeros dialsteps-applied)
-       (count (filter zero? (:numbers dialsteps-applied))))))
+   (time (println
+           (let [dialnumbers-start [50]
+                 dialsteps (map dialstep->n (string/split-lines input))
+                 dialsteps-applied (apply-dialsteps {:numbers dialnumbers-start} dialsteps)]
+             (if method-click?
+               (:zeros dialsteps-applied)
+               (count (filter zero? (:numbers dialsteps-applied))))))))
   ([input]
    (secretentrance input {})))
+
+(defn -main [& args]
+  (if (= ["--method-click"] args)
+    (secretentrance (input) {:method-click? true})
+    (secretentrance (input))))
