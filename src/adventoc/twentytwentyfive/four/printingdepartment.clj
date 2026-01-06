@@ -1,5 +1,7 @@
 (ns adventoc.twentytwentyfive.four.printingdepartment
   (:require
+   [adventoc.helpers :refer [input]]
+   [clojure.java.io :as io]
    [clojure.string :as string]))
 
 (def paperroll \@)
@@ -96,15 +98,21 @@
 (defn printingdepartment
   ([input, {:keys [continuous-removal?]}]
    (time
-     (let [grid (input->grid input)]
-       (if continuous-removal?
-         (counts-no-more-than-continuous grid adjacency-limit)
-         ;; else
-         (let [counts (adjacency-counts grid)
-               significant-adjacents-count (counts-no-more-than grid counts adjacency-limit)]
-           significant-adjacents-count)))))
+     (println
+       (let [grid (input->grid input)]
+         (if continuous-removal?
+           (counts-no-more-than-continuous grid adjacency-limit)
+           ;; else
+           (let [counts (adjacency-counts grid)
+                 significant-adjacents-count (counts-no-more-than grid counts adjacency-limit)]
+             significant-adjacents-count))))))
   ([input]
    (printingdepartment input {})))
+
+(defn -main [& args]
+  (if (= ["--continuous"] args)
+    (printingdepartment (input) {:continuous-removal? true})
+    (printingdepartment (input))))
 
 (comment (printingdepartment "..@@.@@@@.
 @@@.@.@.@@
