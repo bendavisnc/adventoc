@@ -85,15 +85,16 @@
                              row)))
          grid)))
 
-(defn counts-no-more-than-continuous [grid, n]
-  (loop [g grid
-         acc 0]
-    (let [counts (adjacency-counts g)
-          removed (counts-no-more-than g counts n)]
-      (if (zero? removed)
-        acc
-        (recur (grid-next g counts n)
-               (+ acc removed))))))
+(defn counts-no-more-than-continuous [grid n]
+  (some (fn [[_ removed acc]]
+            (when (some-> removed zero?)
+              acc))
+        (iterate
+          (fn [[g _ acc]]
+            (let [counts (adjacency-counts g)
+                  removed (counts-no-more-than g counts n)]
+              [(grid-next g counts n) removed (+ acc removed)]))
+          [grid nil 0])))
 
 (defn printingdepartment
   ([input, {:keys [continuous-removal?]}]
