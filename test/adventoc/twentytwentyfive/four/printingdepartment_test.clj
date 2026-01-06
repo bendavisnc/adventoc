@@ -38,9 +38,20 @@
                                     ".@@@@@@@@."
                                     "@.@.@@@.@."]))
           counts (core/adjacency-counts grid)]
-      (is (= 13 (core/counts-less-than grid counts core/adjacency-limit))))))
+      (is (= 13 (core/counts-no-more-than grid counts core/adjacency-limit))))))
 
 (deftest grid-next-test
+  (testing "grid-next, basic"
+    (let [grid (core/input->grid (string/join "\n"
+                                   ["..@"
+                                    "@@@"
+                                    "@@@"]))
+          counts (core/adjacency-counts grid)
+          grid-next (core/grid-next grid counts core/adjacency-limit)]
+      (is (= [[\. \. \.]
+              [\. \@ \@]
+              [\. \@ \.]]
+             grid-next))))
   (testing "grid-next"
     (let [grid (core/input->grid (string/join "\n"
                                    ["..@@.@@@@."
@@ -56,8 +67,8 @@
           counts (core/adjacency-counts grid)
           grid-next (core/grid-next grid counts core/adjacency-limit)
           counts-next (core/adjacency-counts grid-next)
-          _ (is (= 12 (core/counts-less-than grid-next counts-next core/adjacency-limit)))
+          _ (is (= 12 (core/counts-no-more-than grid-next counts-next core/adjacency-limit)))
           grid-next-next (core/grid-next grid-next counts-next core/adjacency-limit)
           counts-next-next (core/adjacency-counts grid-next-next)
-          _ (is (= 7 (core/counts-less-than grid-next-next counts-next-next core/adjacency-limit)))]
+          _ (is (= 7 (core/counts-no-more-than grid-next-next counts-next-next core/adjacency-limit)))]
       nil)))

@@ -33,66 +33,65 @@
           counts
           (adjacencies [x, y], [x-max, y-max])))
 
+(defn all-coords [[max-x, max-y]]
+  (mapcat (fn [x]
+            (map (fn [y]
+                   [x, y])
+                 (range max-y)))
+          (range max-x)))
+
+(defn size [grid]
+  (if-let [row (first grid)]
+    [(count row) (count grid)]
+    (throw (ex-info "Empty grid" {:grid grid}))))
+
 (defn adjacency-counts [grid]
-  (let [row-size (count (first grid))
-        column-size (count grid)]
+  (let [bounds (size grid)]
     (reduce (fn [acc, [x, y]]
               (if (occupied? grid [x, y])
-                (increment-adjacents acc [x, y] [row-size, column-size])
+                (increment-adjacents acc [x, y] bounds)
                 acc))
             {}
-            (for [row (range row-size)
-                  column (range column-size)]
-              [row, column]))))
+            (all-coords bounds))))
 
 (defn input->grid [input]
   (vec (for [row (vec (string/split-lines input))]
          (vec row))))
 
-(defn counts-less-than [grid, counts, n]
-  (let [row-size (count (first grid))
-        column-size (count grid)]
-    (reduce (fn [acc, [x, y]]
-              (let [adjacency-count (or (get-in counts [x, y])
-                                        0)]
-                (if (<= adjacency-count n)
-                  (inc acc)
-                  acc)))
-            0
-            (for [row (range row-size)
-                  column (range column-size)
-                  :when (occupied? grid [row, column])]
-              [row, column]))))
+(defn counts-no-more-than [grid, counts, n]
+  (reduce (fn [acc, [x, y]]
+            (let [adjacency-count (or (get-in counts [x, y])
+                                      0)]
+              (if (<= adjacency-count n)
+                (inc acc)
+                acc)))
+          0
+          (filter (partial occupied? grid)
+                  (all-coords (size grid)))))
 
 (defn grid-next [grid, counts, n]
-  (let [row-size (count (first grid))
-        column-size (count grid)]
-    (reduce (fn [acc, [x, y]]
-              (let [adjacency-count (or (get-in counts [x, y])
-                                        0)
-                    marker (cond (not (occupied? grid [x, y]))
-                                 paperroll-absent
-                                 (<= adjacency-count n)
-                                 paperroll-absent
-                                 :else
-                                 (get-in grid [y, x]))]
-                (assoc-in acc [y, x] marker)))
-            (vec (take row-size (repeat [])))
-            (for [row (range row-size)
-                  column (range column-size)]
-              [row, column]))))
+  (vec (map-indexed (fn [y, row]
+                      (vec (map-indexed (fn [x, cell]
+                                          (cond (= paperroll-absent cell)
+                                                paperroll-absent
+                                                (<= (or (get-in counts [x, y])
+                                                        0)
+                                                    n)
+                                                paperroll-absent
+                                                :else
+                                                paperroll))
+                             row)))
+         grid)))
 
 (defn counts-no-more-than-continuous [grid, n]
   (loop [g grid
-         acc 0
-         last-count nil]
-    (if (> 1 (or last-count ##Inf))
-      (+ acc last-count)
-      (let [acs (adjacency-counts g)
-            c (counts-less-than g acs n)
-            acc-next (+ acc (or last-count 0))
-            g-next (grid-next g acs n)]
-        (recur g-next acc-next c)))))
+         acc 0]
+    (let [counts (adjacency-counts g)
+          removed (counts-no-more-than g counts n)]
+      (if (zero? removed)
+        acc
+        (recur (grid-next g counts n)
+               (+ acc removed))))))
 
 (defn printingdepartment
   ([input, {:keys [continuous-removal?]}]
@@ -102,7 +101,7 @@
          (counts-no-more-than-continuous grid adjacency-limit)
          ;; else
          (let [counts (adjacency-counts grid)
-               significant-adjacents-count (counts-less-than grid counts adjacency-limit)]
+               significant-adjacents-count (counts-no-more-than grid counts adjacency-limit)]
            significant-adjacents-count)))))
   ([input]
    (printingdepartment input {})))
