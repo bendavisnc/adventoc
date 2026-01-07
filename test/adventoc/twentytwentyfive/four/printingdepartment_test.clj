@@ -19,11 +19,6 @@
     (is (= [[1 0] [1 1] [2 1] [3 0] [3 1]]
            (core/adjacencies [2, 0] [10, 10])))))
 
-(deftest increment-adjacents-test
-  (testing "increment-adjacents"
-    (is (= {1 {0 1, 1 1}, 0 {1 1}}
-           (core/increment-adjacents {} [0 0] [10, 10])))))
-
 (deftest counts-no-more-than-test
   (testing "counts-no-more-than"
     (let [grid (core/input->grid (string/join "\n"

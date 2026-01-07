@@ -29,11 +29,11 @@
           deltas))
       deltas)))
 
-(defn increment-adjacents [counts, [x, y], [x-max, y-max]]
-  (reduce (fn [acc, [x', y']]
-            (update-in acc [x', y'] (fnil inc 0)))
-          counts
-          (adjacencies [x, y], [x-max, y-max])))
+;; (defn increment-adjacents [counts, [x, y], [x-max, y-max]]
+;;   (reduce (fn [acc, [x', y']]
+;;             (update-in acc [x', y'] (fnil inc 0)))
+;;           counts
+;;           (adjacencies [x, y], [x-max, y-max])))
 
 (defn all-coords [[max-x, max-y]]
   (mapcat (fn [x]
@@ -48,13 +48,16 @@
     (throw (ex-info "Empty grid" {:grid grid}))))
 
 (defn adjacency-counts [grid]
-  (let [bounds (size grid)]
-    (reduce (fn [acc, [x, y]]
-              (if (occupied? grid [x, y])
-                (increment-adjacents acc [x, y] bounds)
-                acc))
+  (let [bounds (size grid)
+        adjacents (mapcat (fn [[x, y]]
+                            (adjacencies [x, y], bounds))
+                          (filter (partial occupied? grid)
+                                  (all-coords bounds)))
+        freqs (frequencies adjacents)]
+    (reduce (fn [acc [[x y], count]]
+              (assoc-in acc [x, y] count))
             {}
-            (all-coords bounds))))
+            freqs)))
 
 (defn input->grid [input]
   (vec (for [row (vec (string/split-lines input))]
