@@ -17,11 +17,40 @@
         ids (map parse-long (string/split s2 #"\n"))]
     [ranges, ids]))
 
-(defn cafeteria [input]
-  (let [[ranges, ids] (input->fresh-ingrediant-ranges-and-ids input)
-        range-fns (map (partial apply is-in-range?) ranges)
+(defn fresh-ids-count [ranges, ids]
+  (let [range-fns (map (partial apply is-in-range?) ranges)
         in-any-range? (apply some-fn range-fns)]
     (count (filter in-any-range? ids))))
 
+(defn ranges-no-intersections [ranges]
+  (reverse (reduce (fn [acc, [start, end]]
+                     (let [[prior-start, prior-end] (some-> acc first)]
+                       (if (<= start (or prior-end ##-Inf))
+                         (conj (rest acc)
+                               (list prior-start (max prior-end, end)))
+                         (conj acc (list start end)))))
+             nil
+             (sort-by first ranges))))
+
+(defn fresh-ids-range-sum [ranges]
+  (reduce (fn [acc [start, end]]
+            (+ acc
+               (- end start)
+               1))
+          0
+          (ranges-no-intersections ranges)))
+
+(defn cafeteria
+  ([input {:keys [all-ids?]}]
+   (time (println
+           (let [[ranges, ids] (input->fresh-ingrediant-ranges-and-ids input)]
+             (if all-ids?
+               (fresh-ids-range-sum ranges)
+               (fresh-ids-count ranges ids))))))
+  ([input]
+   (cafeteria input {})))
+
 (defn -main [& args]
-  (time (println (cafeteria (input)))))
+  (if (= ["--all-ids"] args)
+    (cafeteria (input) {:all-ids? true})
+    (cafeteria (input))))

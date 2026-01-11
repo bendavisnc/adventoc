@@ -5,7 +5,8 @@
 # make MAIN=adventoc.twentytwentyfive.three.lobby ARGS="--joltage-length-extended" autorun autorun
 # make MAIN=adventoc.twentytwentyfive.four.printingdepartment autotest
 # make MAIN=adventoc.twentytwentyfive.five.cafeteria autorun
-make MAIN=adventoc.twentytwentyfive.five.cafeteria autotest
+make MAIN=adventoc.twentytwentyfive.five.cafeteria ARGS="--all-ids" autorun
+# make MAIN=adventoc.twentytwentyfive.five.cafeteria autotest
 # make MAIN=adventoc.twentytwentyfive.four.printingdepartment ARGS="--continuous" autorun 
 # make MAIN=adventoc.twentytwentyone.twentythree.amphipod 
 # make MAIN=adventoc.twentytwentyone.fifteen.chiton
