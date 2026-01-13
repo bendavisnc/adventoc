@@ -26,7 +26,7 @@
 (defn ranges-no-intersections [ranges]
   (reverse (reduce (fn [acc, range]
                      (m/match [acc, range]
-                       (m/and [((?prior-start, ?prior-end) & ?tail), (?start, ?end)]
+                       (m/and [(m/seqable (m/seqable ?prior-start, ?prior-end) & ?tail), (m/seqable ?start, ?end)]
                               (m/guard (<= ?start ?prior-end)))
                        (conj ?tail (list ?prior-start (max ?prior-end, ?end)))
                        _
@@ -57,8 +57,8 @@
     (cafeteria (input) {:all-ids? true})
     (cafeteria (input))))
 
-(comment (m/match [(list [1, 2] [3, 4], [5, 6]) [8, 9]]
-                  (m/and [([?a, ?b] & ?tail) [?x, ?y]]
+(comment (m/match ['([1, 2] [3, 4], [5, 6]) [8, 9]]
+                  (m/and [(m/seqable [?a, ?b] & ?tail) [?x, ?y]]
                          (m/guard (> ?x ?a)))
                   (conj ?tail [11, 12])
                   _ :basicbeans))

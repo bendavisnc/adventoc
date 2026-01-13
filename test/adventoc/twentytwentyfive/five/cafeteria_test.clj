@@ -24,13 +24,14 @@
 (deftest ranges-no-intersections-test
   (testing "ranges-no-intersections"
     (is (= [[3, 5], [10, 20]]
-           (core/ranges-no-intersections '((3,5), (10,14), (12,18), (13, 14) (16,20)))))
+           (core/ranges-no-intersections [[3,5], [10,14], [12,18], [13, 14] [16,20]])))
     (is (= [[3, 5], [10, 20]]
-           (core/ranges-no-intersections '((3,5), (10,14), (16,20), (12,18)))))))
+           (core/ranges-no-intersections [[3,5], [10,14], [16,20], [12,18]])))))
 
 (deftest fresh-ids-range-sum-test
   (testing "fresh-ids-range-sum"
     (is (= 14
-          (core/fresh-ids-range-sum '((3,5), (10,14), (12,18), (13, 14) (16,20)))))
+           (core/fresh-ids-range-sum [[3,5], [10,14], [16,20], [12,18]])))
+
     (is (= 14
-          (core/fresh-ids-range-sum '((3,5), (10,14), (16,20), (12,18)))))))
+           (core/fresh-ids-range-sum [[3,5], [10,14], [12,18], [13, 14] [16,20]])))))
