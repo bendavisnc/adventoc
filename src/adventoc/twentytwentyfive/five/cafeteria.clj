@@ -1,7 +1,8 @@
 (ns adventoc.twentytwentyfive.five.cafeteria
   (:require
    [adventoc.helpers :refer [input]]
-   [clojure.string :as string]))
+   [clojure.string :as string]
+   [meander.epsilon :as m]))
 
 (defn is-in-range? [start, end]
   (fn [i]
@@ -23,12 +24,13 @@
     (count (filter in-any-range? ids))))
 
 (defn ranges-no-intersections [ranges]
-  (reverse (reduce (fn [acc, [start, end]]
-                     (let [[prior-start, prior-end] (some-> acc first)]
-                       (if (<= start (or prior-end ##-Inf))
-                         (conj (rest acc)
-                               (list prior-start (max prior-end, end)))
-                         (conj acc (list start end)))))
+  (reverse (reduce (fn [acc, range]
+                     (m/match [acc, range]
+                       (m/and [((?prior-start, ?prior-end) & ?tail), (?start, ?end)]
+                              (m/guard (<= ?start ?prior-end)))
+                       (conj ?tail (list ?prior-start (max ?prior-end, ?end)))
+                       _
+                       (conj acc range)))
              nil
              (sort-by first ranges))))
 
@@ -54,3 +56,9 @@
   (if (= ["--all-ids"] args)
     (cafeteria (input) {:all-ids? true})
     (cafeteria (input))))
+
+(comment (m/match [(list [1, 2] [3, 4], [5, 6]) [8, 9]]
+                  (m/and [([?a, ?b] & ?tail) [?x, ?y]]
+                         (m/guard (> ?x ?a)))
+                  (conj ?tail [11, 12])
+                  _ :basicbeans))
