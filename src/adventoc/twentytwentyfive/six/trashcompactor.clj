@@ -1,7 +1,8 @@
 (ns adventoc.twentytwentyfive.six.trashcompactor
   (:require
    [adventoc.helpers :refer [input]]
-   [clojure.string :as string]))
+   [clojure.string :as string]
+   [meander.epsilon :as m]))
 
 (defn input->grid [input]
   (vec (for [row (vec (string/split-lines input))]
@@ -31,40 +32,42 @@
                   (map parse-long operands))))
        grid))
 
-(defn column->operand [acc]
-  (parse-long (string/trim (apply str acc))))
+(defn column->operand [c]
+  (parse-long (string/trim (apply str c))))
 
-(defn column->operator [acc]
-  (string->operator (str (first acc))))
+(defn column->operator [c]
+  (string->operator (str (first c))))
+
+(defn process-step [acc, column]
+  (m/match (merge acc
+                  {:operator-next (column->operator column)
+                   :operand-next (column->operand (reverse column))})
+    ;; is there a new operator to apply?
+    (m/and {:results ?results
+            :operands ?operands
+            :operator ?op}
+           (m/guard (some? ?op)))
+    {:operands nil
+     :operator nil
+     :results (conj ?results (apply ?op ?operands))}
+    ;; is there a new operator to push (and maybe operand, same column)?
+    {:operator-next ?op}
+    (merge acc
+           {:operator ?op
+            :operands (if-let [operand (column->operand (reverse (rest column)))]
+                        (conj (:operands acc) operand)
+                        (:operands acc))})
+    ;; is there a new operand to push
+    {:operand-next ?operand}
+    (update acc :operands conj ?operand)))
 
 (defn process-math-ops-right->left [grid]
-  (loop [operands nil
-         operator nil
-         operation-results nil
-         raw-columns (reverse (map reverse grid))]
-    (cond operator
-          (recur nil
-                 nil
-                 (conj operation-results (apply operator operands))
-                 raw-columns)
-          (empty? raw-columns)
-          operation-results
-          (column->operator (first raw-columns))
-          (let [column (first raw-columns)]
-            (recur (if-let [oper (column->operand (reverse (rest column)))]
-                     (conj operands oper)
-                     operands)
-                   (column->operator column)
-                   operation-results
-                   (rest raw-columns)))
-          :else
-          (let [column (first raw-columns)]
-            (recur (if-let [oper (column->operand (reverse column))]
-                     (conj operands oper)
-                     operands)
-                   nil
-                   operation-results
-                   (rest raw-columns))))))
+  (let [s {:operands nil
+           :operator nil
+           :results nil}
+        columns (concat (reverse (map reverse grid)) ;; empty list to add one last step for performing the last operation.
+                        (list []))]
+    (:results (reduce process-step s columns))))
 
 (defn trashcompactor
   ([input {:keys [right-to-left]}]
