@@ -12,6 +12,18 @@
                                                 "7 8 9"
                                                 "+ * *"]))))))
 
+(deftest grid-rows-columns-switch-test
+  (testing "grid-rows-columns-switch"
+    (is (= [["a" "c"]
+            ["b" "d"]]
+           (core/grid-rows-columns-switch (core/input->grid (string/join "\n" ["a b"
+                                                                               "c d"])))))
+    (is (= [["a" "e"]
+            ["b" "f"]
+            ["c" "g"]]
+           (core/grid-rows-columns-switch (core/input->grid (string/join "\n" ["a b c"
+                                                                               "e f g"])))))))
+
 (deftest input-to-grid-whitespace-included-test
   (testing "input->grid-keep-whitespace"
     (is (= [[\1 \space \2 \space \3] [\4 \space \5 \space \6] [\7 \space \8 \space \9] [\+ \space \* \space \*]]
