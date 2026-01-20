@@ -8,7 +8,8 @@
 # make MAIN=adventoc.twentytwentyfive.five.cafeteria ARGS="--all-ids" autorun
 # make MAIN=adventoc.twentytwentyfive.five.cafeteria autotest
 # make MAIN=adventoc.twentytwentyfive.six.trashcompactor autorun
-make MAIN=adventoc.twentytwentyfive.six.trashcompactor autotest
+# make MAIN=adventoc.twentytwentyfive.six.trashcompactor autotest
+make MAIN=adventoc.twentytwentyfive.seven.laboratories autorun
 # make MAIN=adventoc.twentytwentyfive.six.trashcompactor ARGS="--right-to-left" autorun
 # make MAIN=adventoc.twentytwentyfive.four.printingdepartment ARGS="--continuous" autorun 
 # make MAIN=adventoc.twentytwentyone.twentythree.amphipod 
