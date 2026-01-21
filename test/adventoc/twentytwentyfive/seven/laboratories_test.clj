@@ -20,3 +20,14 @@
                                 "..^.^.."
                                 "......."
                                 "......."])))))
+
+(deftest count-splinters-test
+  (testing "beam-splinters-count"
+    (is (= 3
+           (core/beam-splinters-count (core/insert-beams  ["...S..."
+                                                           "......."
+                                                           "...^..."
+                                                           "......."
+                                                           "..^.^.."
+                                                           "......."
+                                                           "......."]))))))
