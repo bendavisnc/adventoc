@@ -14,13 +14,7 @@
       (when (not= idx -1) idx))))
 
 (defn input->rows [input]
-  ;; (map seq (string/split-lines input)))
   (string/split-lines input))
-
-;; (defn laboratories [input]
-;;   (dec (count (filter (fn [c]
-;;                         (= splinter c))
-;;                 input))))
 
 (defn insert-beams [rows]
   (loop [acc nil
@@ -28,7 +22,6 @@
     ;; have we exhausted rows to update? 
     (if-not headrow
       (reverse acc)
-      ;; else
       ;; are we at the start?
       (if-let [s-index (index-of headrow s)]
         (let [[headrow' & restrows'] restrows
