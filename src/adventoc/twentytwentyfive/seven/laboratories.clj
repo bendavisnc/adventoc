@@ -13,63 +13,8 @@
     (as-> (string/index-of s c-or-s) idx
       (when (not= idx -1) idx))))
 
-(defn input->rows [input]
+(defn input->grid [input]
   (string/split-lines input))
-
-;; (defn insert-beams [rows]
-;;   (loop [acc nil
-;;          [headrow, & restrows] rows]
-;;     ;; have we exhausted rows to update? 
-;;     (if-not headrow
-;;       (reverse acc)
-;;       ;; are we at the start?
-;;       (if-let [s-index (index-of headrow s)]
-;;         (let [[headrow' & restrows'] restrows
-;;               firstbeamrow (apply str (map (fn [[i c]]
-;;                                              (if (= s-index i)
-;;                                                beam
-;;                                                c))
-;;                                         (map-indexed vector headrow')))]
-;;           (recur (concat (list firstbeamrow headrow)
-;;                          acc)
-;;                  restrows'))
-
-;;         ;; is there a left sided beam to insert?
-;;         (if-let [left-splinter-index (index-of headrow (str vacancy splinter))]
-;;           (let [updatedrow (apply str (map (fn [[i c]]
-;;                                              (if (= left-splinter-index i)
-;;                                                beam
-;;                                                c))
-;;                                            (map-indexed vector headrow)))]
-;;             (recur acc
-;;                    (conj restrows updatedrow)))
-
-;;           ;; is there a right sided beam to insert?
-;;           (if-let [right-splinter-index (index-of headrow (str splinter vacancy))]
-;;             (let [updatedrow (apply str (map (fn [[i c]]
-;;                                                (if (= (inc right-splinter-index) i)
-;;                                                  beam
-;;                                                  c))
-;;                                           (map-indexed vector headrow)))]
-;;               (recur acc
-;;                 (conj restrows updatedrow)))
-
-;;             ;; is there a bottom beam to insert?
-;;             (if-let [missing-beam-index (when-let [top-row (first acc)]
-;;                                           (some (fn [[i c]]
-;;                                                   (when (= [beam vacancy] [(nth top-row i), c])
-;;                                                     i))
-;;                                                 (map-indexed vector headrow)))]
-;;               (let [updatedrow (apply str (map (fn [[i c]]
-;;                                                  (if (= missing-beam-index i)
-;;                                                    beam
-;;                                                    c))
-;;                                                (map-indexed vector headrow)))]
-;;                 (recur acc
-;;                   (conj restrows updatedrow)))
-;;               ;; else
-;;               (recur (conj acc headrow)
-;;                      restrows))))))))
 
 (defn beam-at [row, idx]
   (apply str (map (fn [[i c]]
@@ -78,9 +23,9 @@
                       c))
                (map-indexed vector row))))
 
-(defn insert-beams [rows]
+(defn insert-beams [grid]
   (loop [acc nil
-         [row & more] rows]
+         [row & more] grid]
     (if-not row
       (reverse acc)
       (let [start-idx        (index-of row s)
@@ -114,9 +59,9 @@
           (recur (cons row acc)
                  more))))))
 
-(defn beam-splinters-count [rows]
+(defn beam-splinters-count [grid]
   (loop [how-many 0
-         [headrow & restrows] rows
+         [headrow & restrows] grid
          acc nil]
     (if (nil? headrow)
       how-many
@@ -133,9 +78,9 @@
                (conj acc headrow))))))
 
 (defn laboratories [input]
-  (let [rows (input->rows input)
-        rowsupdated (insert-beams rows)]
-    (beam-splinters-count rowsupdated)))
+  (let [grid (input->grid input)
+        grid-with-beams (insert-beams grid)]
+    (beam-splinters-count grid-with-beams)))
 
 (defn -main [& args]
   (time (println
