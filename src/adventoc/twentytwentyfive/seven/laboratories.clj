@@ -1,17 +1,12 @@
 (ns adventoc.twentytwentyfive.seven.laboratories
   (:require
    [adventoc.helpers :refer [input]]
-   [clojure.string :as string]))
+   [clojure.string :as string :refer [index-of]]))
 
 (def s \S)
 (def beam \|)
 (def splinter \^)
 (def vacancy \.)
-
-(def index-of
-  (fn [^String s c-or-s]
-    (as-> (string/index-of s c-or-s) idx
-      (when (not= idx -1) idx))))
 
 (defn input->grid [input]
   (string/split-lines input))
@@ -22,6 +17,13 @@
                       beam
                       c))
                (map-indexed vector row))))
+
+(defn all-coords [[max-x, max-y]]
+  (mapcat (fn [y]
+            (map (fn [x]
+                   [x, y])
+                 (range max-x)))
+          (range max-y)))
 
 (defn beam-insert-step [grid, [x, y]]
   (let [top (fn [[x', y']]
@@ -35,13 +37,6 @@
     (if should-insert?
       (update grid y #(beam-at % x))
       grid)))
-
-(defn all-coords [[max-x, max-y]]
-  (mapcat (fn [x]
-            (map (fn [y]
-                   [x, y])
-                 (range max-y)))
-          (range max-x)))
 
 (defn insert-beams [grid]
   (let [max-x (count (first grid))
@@ -66,11 +61,39 @@
                restrows
                (conj acc headrow))))))
 
-(defn laboratories [input]
-  (let [grid (input->grid input)
-        grid-with-beams (insert-beams grid)]
-    (beam-splinters-count grid-with-beams)))
+(defn splintering-exploration [grid]
+  (loop [st8 {}
+         rows grid]
+    (cond (empty? rows)
+          st8
+          (empty? st8)
+          (recur (assoc st8
+                        (index-of (first rows) s)
+                        1)
+                 (rest rows))
+          :else
+          (let [row (first rows)]
+            (recur (reduce (fn [s, i]
+                             (if (= splinter (nth row i))
+                               (-> s
+                                   (update (dec i) (fnil + 0) (st8 i))
+                                   (update (inc i) (fnil + 0) (st8 i)))
+                               (update s i (fnil + 0) (st8 i))))
+                           {}
+                           (keys st8))
+                   (rest rows))))))
+
+(defn laboratories
+  ([input {:keys [quantum]}]
+   (let [grid (input->grid input)]
+     (if quantum
+       (apply + (vals (splintering-exploration grid)))
+       (beam-splinters-count (insert-beams grid)))))
+  ([input]
+   (laboratories input {})))
 
 (defn -main [& args]
   (time (println
-          (laboratories (input)))))
+          (if (= ["--quantum"] args)
+            (laboratories (input) {:quantum true})
+            (laboratories (input))))))
