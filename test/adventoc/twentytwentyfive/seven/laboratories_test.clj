@@ -35,10 +35,10 @@
 (deftest splinter-possibilities-test
   (testing "splinter-possibilities"
     (is (=  {1 1, 3 2, 5 1}
-            (core/splintering-exploration ["...S..."
-                                           "......."
-                                           "...^..."
-                                           "......."
-                                           "..^.^.."
-                                           "......."
-                                           "......."])))))
+            (core/grid->branching-per-column ["...S..."
+                                              "......."
+                                              "...^..."
+                                              "......."
+                                              "..^.^.."
+                                              "......."
+                                              "......."])))))

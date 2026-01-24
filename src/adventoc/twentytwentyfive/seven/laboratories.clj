@@ -44,50 +44,36 @@
     (reduce beam-insert-step grid (all-coords [max-x, max-y]))))
 
 (defn beam-splinters-count [grid]
-  (loop [how-many 0
-         [headrow & restrows] grid
-         acc nil]
-    (if (nil? headrow)
-      how-many
-      (if-let [top-row (first acc)]
-        (let [row-splinters (count (filter (fn [[i, c]]
-                                             (= [beam splinter]
-                                                [(nth top-row i) c]))
-                                           (map-indexed vector headrow)))]
-          (recur (+ how-many row-splinters)
-                 restrows
-                 (conj acc headrow)))
-        (recur how-many
-               restrows
-               (conj acc headrow))))))
+  (reduce (fn [acc row-idx]
+            (+ acc
+               (count (filter (fn [ab]
+                                (= [beam, splinter] ab))
+                              (map vector
+                                   (nth grid (dec row-idx))
+                                   (nth grid row-idx))))))
+          0
+          (range 1 (count grid))))
 
-(defn splintering-exploration [grid]
-  (loop [st8 {}
-         rows grid]
-    (cond (empty? rows)
-          st8
-          (empty? st8)
-          (recur (assoc st8
-                        (index-of (first rows) s)
-                        1)
-                 (rest rows))
-          :else
-          (let [row (first rows)]
-            (recur (reduce (fn [s, i]
-                             (if (= splinter (nth row i))
-                               (-> s
-                                   (update (dec i) (fnil + 0) (st8 i))
-                                   (update (inc i) (fnil + 0) (st8 i)))
-                               (update s i (fnil + 0) (st8 i))))
-                           {}
-                           (keys st8))
-                   (rest rows))))))
+(defn grid->branching-per-column-step [acc, row]
+  (if (empty? acc)
+    {(index-of row s) 1}
+    (reduce (fn [s, i]
+              (if (= splinter (nth row i))
+                (-> s
+                    (update (dec i) (fnil + 0) (acc i))
+                    (update (inc i) (fnil + 0) (acc i)))
+                (update s i (fnil + 0) (acc i))))
+            {}
+            (keys acc))))
+
+(defn grid->branching-per-column [grid]
+  (reduce grid->branching-per-column-step {} grid))
 
 (defn laboratories
   ([input {:keys [quantum]}]
    (let [grid (input->grid input)]
      (if quantum
-       (apply + (vals (splintering-exploration grid)))
+       (apply + (vals (grid->branching-per-column grid)))
        (beam-splinters-count (insert-beams grid)))))
   ([input]
    (laboratories input {})))
@@ -97,3 +83,5 @@
           (if (= ["--quantum"] args)
             (laboratories (input) {:quantum true})
             (laboratories (input))))))
+
+(comment (map vector (list 1 2) (list 8 9)))
