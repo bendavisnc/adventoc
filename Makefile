@@ -21,13 +21,23 @@ run: check-main format
 	clj -M -m $(MAIN) $(ARGS)
 
 autorun:
-	find . -iname '*.clj' | entr make run \
-		MAIN=$(MAIN) \
-		ARGS="$(ARGS)"
+	find . -iname '*.clj' | entr env MAIN=$(MAIN) ARGS="$(ARGS)" make run
 
 format:
-	@echo "Formatting clj."
-	standard-clj fix src test deps.edn
+	@echo "Formatting Clojure for $$MAIN with zprint..."
+	@MAIN_PATH="$$(echo "$$MAIN" | sed 's/\.[^.]*$$//' | tr . /)"; \
+	echo "Computed MAIN_PATH (directory): $$MAIN_PATH"; \
+	DIRS=""; \
+	[ -e "src/$$MAIN_PATH" ]  && DIRS="$$DIRS src/$$MAIN_PATH"; \
+	[ -e "test/$$MAIN_PATH" ] && DIRS="$$DIRS test/$$MAIN_PATH"; \
+	if [ -n "$$DIRS" ]; then \
+	  echo "Formatting files under: $$DIRS"; \
+	  find $$DIRS \( -iname "*.clj" \) -print0 \
+	    | xargs -0 zprint '{:style :community, :parse {:interpose "\n\n"}}' -w; \
+	else \
+	  echo "No matching src/test paths for $$MAIN"; \
+	fi
+
 
 %:
 	@:
