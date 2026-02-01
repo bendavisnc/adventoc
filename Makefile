@@ -33,7 +33,7 @@ format:
 	if [ -n "$$DIRS" ]; then \
 	  echo "Formatting files under: $$DIRS"; \
 	  find $$DIRS \( -iname "*.clj" \) -print0 \
-	    | xargs -0 zprint '{:style :community, :parse {:interpose "\n\n"}}' -w; \
+	    | xargs -0 zprint '{:style [:community :respect-nl :justified] }' -w; \
 	else \
 	  echo "No matching src/test paths for $$MAIN"; \
 	fi

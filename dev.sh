@@ -12,6 +12,7 @@
 # make MAIN=adventoc.twentytwentyfive.seven.laboratories autorun
 # make MAIN=adventoc.twentytwentyfive.seven.laboratories ARGS="--quantum" autorun
 make MAIN=adventoc.twentytwentyfive.eight.playground ARGS="--connection-count=10" autorun
+# make MAIN=adventoc.twentytwentyfive.eight.playground ARGS="--connect-all" autorun
 # make MAIN=adventoc.twentytwentyfive.eight.playground autorun
 # make MAIN=adventoc.twentytwentyfive.seven.laboratories autotest
 # make MAIN=adventoc.twentytwentyfive.six.trashcompactor ARGS="--right-to-left" autorun
