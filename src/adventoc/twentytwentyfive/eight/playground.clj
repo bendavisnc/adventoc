@@ -43,33 +43,35 @@
       (let [[conns-next conn] (connection-group conns)]
         (recur conns-next (conj acc conn))))))
 
-(defn connections
+(defn closest-connections
   [coord-distances n]
-  (loop [conns {}
-         i     0]
+  (loop [connectionz {}
+         i 0]
     (if (> i n)
-      conns
+      connectionz
       ;;else
       (let [[[a b] _] (nth coord-distances i)]
-        (recur (-> conns
+        (recur (-> connectionz
                    (update a conj b)
                    (update b conj a))
                (inc i))))))
 
 (defn coord-distances
   [coords coord-combos]
-  (vec (sort-by last
-                (for [[idx-a idx-b] coord-combos]
-                  [[idx-a idx-b] (distance (coords idx-a) (coords idx-b))]))))
+  (assert (vector? coords))
+  (assert (vector? (first coords)))
+  (->> coord-combos
+       (mapv (fn [[a b]] [[a b] (distance (coords a) (coords b))]))
+       (sort-by last)))
 
 (defn connect
   [coords limit]
   (let [coord-combos      (all-coord-combos (count coords))
         coord-distancez   (coord-distances coords coord-combos)
-        connectionz       (connections coord-distancez
-                                       (or (some-> limit
-                                                   dec)
-                                           (count coords)))
+        connectionz       (closest-connections coord-distancez
+                                               (or (some-> limit
+                                                           dec)
+                                                   (count coords)))
 
         connection-groupz (connection-groups connectionz)]
     connection-groupz))
@@ -88,7 +90,7 @@
           [[(nth coords a) (nth coords b)]
            (first connection-groupz)])
         (recur (inc i)
-               (connection-groups (connections coord-distancez i)))))))
+               (connection-groups (closest-connections coord-distancez i)))))))
 
 (defn playground
   ([input {:keys [connection-count connect-all?]}]
@@ -123,3 +125,7 @@
                    (playground (input)
                                {:connection-count connection-count
                                 :connect-all?     connect-all?})))))
+
+
+(comment
+  (sort-by last [[:a :b] [:c :d]]))
