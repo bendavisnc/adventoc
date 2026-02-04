@@ -1,7 +1,9 @@
 (ns adventoc.twentytwentyfive.eight.playground
-  (:require [adventoc.helpers :refer [input]]
-            [clojure.string :as string]
-            [clojure.math :refer [pow]]))
+  (:require
+    [adventoc.helpers :refer [input]]
+    [clojure.math :refer [pow]]
+    [clojure.set :as set]
+    [clojure.string :as string]))
 
 (defn input->coords
   [input]
@@ -23,39 +25,6 @@
           (pow (- z1 z2) 2))
        (/ 1 2)))
 
-(defn connection-group
-  [connections]
-  (loop [connectionz connections
-         connects    [(first (first connections))]
-         acc         #{}]
-    (if (empty? connects)
-      [connectionz acc]
-      (recur (dissoc connectionz (first connects))
-             (lazy-cat (rest connects) (connectionz (first connects)))
-             (conj acc (first connects))))))
-
-(defn connection-groups
-  [connections]
-  (loop [conns connections
-         acc   []]
-    (if (empty? conns)
-      acc
-      (let [[conns-next conn] (connection-group conns)]
-        (recur conns-next (conj acc conn))))))
-
-(defn closest-connections
-  [coord-distances n]
-  (loop [connectionz {}
-         i 0]
-    (if (> i n)
-      connectionz
-      ;;else
-      (let [[[a b] _] (nth coord-distances i)]
-        (recur (-> connectionz
-                   (update a conj b)
-                   (update b conj a))
-               (inc i))))))
-
 (defn coord-distances
   [coords coord-combos]
   (assert (vector? coords))
@@ -65,44 +34,109 @@
        (sort-by last)))
 
 (defn connect
-  [coords limit]
-  (let [coord-combos      (all-coord-combos (count coords))
-        coord-distancez   (coord-distances coords coord-combos)
-        connectionz       (closest-connections coord-distancez
-                                               (or (some-> limit
-                                                           dec)
-                                                   (count coords)))
-
-        connection-groupz (connection-groups connectionz)]
-    connection-groupz))
-
-(defn connect-all
-  [coords]
+  [coords & [limit]]
   (let [coord-count     (count coords)
         coord-combos    (all-coord-combos (count coords))
-        coord-distancez (coord-distances coords coord-combos)]
+        coord-distances (coord-distances coords coord-combos)]
     (loop [i 0
-           connection-groupz nil]
-      (if (and (= 1 (count connection-groupz))
-               (= coord-count
-                  (count (first connection-groupz))))
-        (let [[[a b] _] (nth coord-distancez (dec i))]
-          [[(nth coords a) (nth coords b)]
-           (first connection-groupz)])
-        (recur (inc i)
-               (connection-groups (closest-connections coord-distancez i)))))))
+           connections {}
+           connection-groups []
+           connection-groups-count 0
+           max-connection-group-size 0]
+      (let [[[a b] _] (nth coord-distances i)
+            a-group   (some-> a
+                              connections
+                              connection-groups)
+            b-group   (some-> b
+                              connections
+                              connection-groups)]
+        (cond
+          (= i
+             limit)
+          {:connection-groups (filterv seq connection-groups)}
+          (= coord-count
+             max-connection-group-size)
+          (let [[[a b] _] (nth coord-distances (dec i))]
+            {:last-connection [[(nth coords a) (nth coords b)]]})
+          ;; No existing groups to connect to
+          (and (nil? a-group)
+               (nil? b-group))
+          (let [connection-group-index connection-groups-count]
+            (recur (inc i)
+                   (-> connections
+                       (assoc a connection-group-index)
+                       (assoc b connection-group-index))
+                   (conj connection-groups #{a b})
+                   (inc connection-groups-count)
+                   max-connection-group-size))
+          ;; connect a to b
+          (nil? a-group)
+          (let [connection-group-index    (connections b)
+                connection-groups-updated (update-in connection-groups
+                                                     [connection-group-index]
+                                                     conj
+                                                     a)]
+            (recur
+             (inc i)
+             (assoc connections a connection-group-index)
+             connection-groups-updated
+             connection-groups-count
+             (max max-connection-group-size
+                  (count (connection-groups-updated connection-group-index)))))
+          ;; connect b to a
+          (nil? b-group)
+          (let [connection-group-index    (connections a)
+                connection-groups-updated (update-in connection-groups
+                                                     [connection-group-index]
+                                                     conj
+                                                     b)]
+            (recur
+             (inc i)
+             (assoc connections b connection-group-index)
+             connection-groups-updated
+             connection-groups-count
+             (max max-connection-group-size
+                  (count (connection-groups-updated connection-group-index)))))
+          ;; merge a and b groups
+          (not= a-group b-group)
+          (let [connection-group-index (connections a)
+                b-group (connection-groups (connections b))
+                connection-groups-updated (-> connection-groups
+                                              (update-in
+                                               [connection-group-index]
+                                               set/union
+                                               b-group)
+                                              (assoc (connections b) nil))]
+            (recur (inc i)
+                   (reduce (fn [acc c]
+                             (assoc acc c connection-group-index))
+                           connections
+                           b-group)
+                   connection-groups-updated
+                   connection-groups-count
+                   (max max-connection-group-size
+                        (count (connection-groups-updated
+                                connection-group-index)))))
+          ;; just continue
+          :else
+          (recur (inc i)
+                 connections
+                 connection-groups
+                 connection-groups-count
+                 max-connection-group-size))))))
 
 (defn playground
   ([input {:keys [connection-count connect-all?]}]
    (let [coords (input->coords input)]
      (if connect-all?
-       (let [[[[x _ _] [x2 _ _]] _] (connect-all coords)]
+       (let [{:keys [last-connection]} (connect coords)
+             [[[x _ _] [x2 _ _]] _]    last-connection]
          (* x x2))
        ;; else
-       (let [conns-groups (connect coords connection-count)
-             top3         (take 3
-                                (sort-by (comp #(* -1 %) count)
-                                         conns-groups))]
+       (let [{:keys [connection-groups]} (connect coords connection-count)
+             top3 (take 3
+                        (sort-by (comp #(* -1 %) count)
+                                 connection-groups))]
          (apply *
                 (map count
                      top3))))))
@@ -129,3 +163,22 @@
 
 (comment
   (sort-by last [[:a :b] [:c :d]]))
+
+(comment
+  (let [groups      [#{1} #{2 3}]
+        connections {1 0
+                     3 1
+                     2 1}
+        a           1
+        b           2
+        a-group     0
+        b-group     1]
+    "merge a and b groups"
+    "for every element in b group, update its connection to a group"))
+
+(comment
+  (set/union #{:a :b} #{:c :b}))
+
+(comment
+  (count #{0 7 1 4 15 13 6 17 3 12 2 19 11 9 5 14 16 10 18 8}))
+
