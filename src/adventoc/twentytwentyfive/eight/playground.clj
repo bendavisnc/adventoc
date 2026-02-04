@@ -31,7 +31,7 @@
     (if (empty? connects)
       [connectionz acc]
       (recur (dissoc connectionz (first connects))
-             (concat (rest connects) (connectionz (first connects)))
+             (lazy-cat (rest connects) (connectionz (first connects)))
              (conj acc (first connects))))))
 
 (defn connection-groups

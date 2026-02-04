@@ -3,13 +3,18 @@
    [clojure.java.io :as io]
    [clojure.string :as string]))
 
-(defn input []
-  (let [filepath (-> (Thread/currentThread)
-                     (.getStackTrace)
-                     (get 3)
-                     (.getClassName))]
-    (assert (< (count "adventoc.helpers")
-               (count filepath))
-            (format "Use of unexpected ns, `%s`" filepath))
-    (slurp (io/resource (string/join "/" (concat (drop-last (string/split filepath #"\."))
-                                           ["input.txt"]))))))
+(defn input
+  ([filepath]
+   (slurp (io/resource filepath)))
+  ([]
+   (let [filepath-ns (-> (Thread/currentThread)
+                         (.getStackTrace)
+                         (get 3)
+                         (.getClassName))
+         _ (assert (< (count "adventoc.helpers")
+                      (count filepath-ns))
+                   (format "Use of unexpected ns, `%s`" filepath-ns))
+         filepath (string/join "/" (concat (drop-last (string/split filepath-ns #"\."))
+                                           ["input.txt"]))]
+     (input filepath))))
+
