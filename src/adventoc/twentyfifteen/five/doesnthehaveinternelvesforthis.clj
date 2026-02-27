@@ -1,17 +1,18 @@
 (ns adventoc.twentyfifteen.five.doesnthehaveinternelvesforthis
   (:require
-   [clojure.string :as string]))
+    [clojure.string :as string]))
 
-(def outlaw-string? #{"ab", "cd", "pq", "xy"})
+(def outlaw-string? #{"ab" "cd" "pq" "xy"})
 
-(def vowel? #{\a, \e, \i, \o, \u})
+(def vowel? #{\a \e \i \o \u})
 
-(defn is-nice? [s]
-  (let [{:keys [outlaw-strings, vowels, letters-twice]}
-        (reduce (fn [acc, i]
-                  (let [c (get s i)
+(defn is-nice?
+  [s]
+  (let [{:keys [outlaw-strings vowels letters-twice]}
+        (reduce (fn [acc i]
+                  (let [c       (get s i)
                         c-prior (get s (dec i))
-                        cc (str c-prior c)]
+                        cc      (str c-prior c)]
                     (cond-> acc
                       (outlaw-string? cc)
                       (update :outlaw-strings (fnil inc 0))
@@ -27,12 +28,13 @@
          letters-twice
          (pos-int? letters-twice))))
 
-(defn is-nice-less-ridiculous? [s]
-  (let [{:keys [letters-repeat, letters-pair]}
-        (reduce (fn [acc, i]
-                  (let [c (get s i)
+(defn is-nice-less-ridiculous?
+  [s]
+  (let [{:keys [letters-repeat letters-pair]}
+        (reduce (fn [acc i]
+                  (let [c       (get s i)
                         c-prior (get s (dec i))
-                        cc (str c-prior c)]
+                        cc      (str c-prior c)]
                     (cond-> acc
                       (and (= 2 (count cc))
                            (not= -1

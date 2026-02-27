@@ -1,7 +1,7 @@
 (ns adventoc.helpers
   (:require
-   [clojure.java.io :as io]
-   [clojure.string :as string]))
+    [clojure.java.io :as io]
+    [clojure.string :as string]))
 
 (defn input
   ([filepath]
@@ -14,7 +14,9 @@
          _ (assert (< (count "adventoc.helpers")
                       (count filepath-ns))
                    (format "Use of unexpected ns, `%s`" filepath-ns))
-         filepath (string/join "/" (concat (drop-last (string/split filepath-ns #"\."))
-                                           ["input.txt"]))]
+         filepath    (string/join "/"
+                                  (concat (drop-last (string/split filepath-ns
+                                                                   #"\."))
+                                          ["input.txt"]))]
      (input filepath))))
 

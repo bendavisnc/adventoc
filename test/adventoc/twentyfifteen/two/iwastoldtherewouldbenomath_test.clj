@@ -1,7 +1,7 @@
 (ns adventoc.twentyfifteen.two.iwastoldtherewouldbenomath-test
   (:require
-   [adventoc.twentyfifteen.two.iwastoldtherewouldbenomath :as core]
-   [clojure.test :refer :all]))
+    [adventoc.twentyfifteen.two.iwastoldtherewouldbenomath :as core]
+    [clojure.test :refer :all]))
 
 (deftest iwastoldtherewouldbenomath-test
   (testing "returns box surface area and smallest side surface area sum"

@@ -1,28 +1,34 @@
 (ns adventoc.twentytwentyone.twentythree.amphipod-solution-test
   (:require
-   [adventoc.twentytwentyone.twentythree.amphipod :as core]
-   [clojure.string :as string]
-   [clojure.test :refer :all]))
+    [adventoc.twentytwentyone.twentythree.amphipod :as core]
+    [clojure.string :as string]
+    [clojure.test :refer :all]))
 
-(def puzzle-tiny (string/join "\n" ["#############"
-                                    "#...........#"
-                                    "###B#A#.#.###"
-                                    "  #A#B#.#.#"
-                                    "  #########"]))
+(def puzzle-tiny
+  (string/join "\n"
+               ["#############"
+                "#...........#"
+                "###B#A#.#.###"
+                "  #A#B#.#.#"
+                "  #########"]))
 
-(def puzzle (string/join "\n" ["#############"
-                               "#...........#"
-                               "###B#C#B#D###"
-                               "  #A#D#C#A#"
-                               "  #########"]))
+(def puzzle
+  (string/join "\n"
+               ["#############"
+                "#...........#"
+                "###B#C#B#D###"
+                "  #A#D#C#A#"
+                "  #########"]))
 
-(def puzzle-large (string/join "\n" ["#############"
-                                     "#...........#"
-                                     "###B#C#B#D###"
-                                     "  #D#C#B#A#"
-                                     "  #D#B#A#C#"
-                                     "  #A#D#C#A#"
-                                     "  #########"]))
+(def puzzle-large
+  (string/join "\n"
+               ["#############"
+                "#...........#"
+                "###B#C#B#D###"
+                "  #D#C#B#A#"
+                "  #D#B#A#C#"
+                "  #A#D#C#A#"
+                "  #########"]))
 
 (deftest solution-tiny-test
   (testing "solution-tiny"

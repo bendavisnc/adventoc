@@ -1,7 +1,7 @@
 (ns adventoc.twentyfifteen.one.notquitelisp-test
   (:require
-   [adventoc.twentyfifteen.one.notquitelisp :as core]
-   [clojure.test :refer :all]))
+    [adventoc.twentyfifteen.one.notquitelisp :as core]
+    [clojure.test :refer :all]))
 
 (deftest paren->num-test
   (testing "paren->num returns correct values"

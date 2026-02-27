@@ -1,28 +1,34 @@
 (ns adventoc.twentytwentyone.twentythree.amphipod-test
   (:require
-   [adventoc.twentytwentyone.twentythree.amphipod :as core]
-   [clojure.string :as string]
-   [clojure.test :refer :all]))
+    [adventoc.twentytwentyone.twentythree.amphipod :as core]
+    [clojure.string :as string]
+    [clojure.test :refer :all]))
 
-(def puzzle (string/join "\n" ["#############"
-                               "#...........#"
-                               "###B#C#B#D###"
-                               "  #A#D#C#A#"
-                               "  #########"]))
+(def puzzle
+  (string/join "\n"
+               ["#############"
+                "#...........#"
+                "###B#C#B#D###"
+                "  #A#D#C#A#"
+                "  #########"]))
 
-(def puzzle-tiny (string/join "\n" ["#############"
-                                    "#...........#"
-                                    "###B#A#.#.###"
-                                    "  #A#B#.#.#"
-                                    "  #########"]))
+(def puzzle-tiny
+  (string/join "\n"
+               ["#############"
+                "#...........#"
+                "###B#A#.#.###"
+                "  #A#B#.#.#"
+                "  #########"]))
 
-(def puzzle-large (string/join "\n" ["#############"
-                                     "#...........#"
-                                     "###B#C#B#D###"
-                                     "  #D#C#B#A#"
-                                     "  #D#B#A#C#"
-                                     "  #A#D#C#A#"
-                                     "  #########"]))
+(def puzzle-large
+  (string/join "\n"
+               ["#############"
+                "#...........#"
+                "###B#C#B#D###"
+                "  #D#C#B#A#"
+                "  #D#B#A#C#"
+                "  #A#D#C#A#"
+                "  #########"]))
 
 (def journey-start (core/journey-start (core/str->burrow puzzle)))
 
@@ -31,10 +37,10 @@
 (deftest journey-to-burrow-test
   (testing "journey->burrow"
     (is (= {:hallway [nil nil nil nil nil nil nil nil nil nil nil]
-            :room {:A [:A0 :B0]
-                   :B [:D1 :C0]
-                   :C [:C1 :B1]
-                   :D [:A1 :D0]}}
+            :room    {:A [:A0 :B0]
+                      :B [:D1 :C0]
+                      :C [:C1 :B1]
+                      :D [:A1 :D0]}}
            (core/journey->burrow journey-start)))))
 
 (deftest distance-test
@@ -60,8 +66,8 @@
 
 (deftest energy-test
   (testing "energy"
-    (let [energies (map core/energy [:A0, :B0, :C0, :D0])]
-      (is (= [1, 10, 100, 1000] energies)))))
+    (let [energies (map core/energy [:A0 :B0 :C0 :D0])]
+      (is (= [1 10 100 1000] energies)))))
 
 (deftest cost-test
   (testing "cost"
@@ -72,7 +78,7 @@
   (testing "move-most-recent"
     (let [journey (-> journey-start
                       (update :moves conj [:A0 [:hallway 0]]))
-          move (core/move-most-recent :A0 (:moves journey))]
+          move    (core/move-most-recent :A0 (:moves journey))]
       (is (= [:A0 [:hallway 0]]
              move)))))
 
@@ -84,7 +90,7 @@
   (testing "positions-between, hallway to hallway, other direction"
     (let [positions (core/positions-between [:hallway 4] [:hallway 0])]
       (is (= (reverse (core/positions-between [:hallway 0] [:hallway 4]))
-            positions))))
+             positions))))
   (testing "positions-between, room to hallway"
     (let [positions (core/positions-between [:room :A 0] [:hallway 5])]
       (is (= [[:room :A 1] [:hallway 2] [:hallway 3] [:hallway 4]]
@@ -105,81 +111,102 @@
 (deftest can-move-test
   (testing "can-move? (to an empty space)"
     (let [valid-move? (core/can-move?
-                        (core/assoc-burrow {:accumulated-cost 0, :moves [[:B0 [:hallway 0]], [:A0 [:room :B 0]]]})
-                        :A0
-                        [:hallway 0])]
+                       (core/assoc-burrow {:accumulated-cost 0
+                                           :moves [[:B0 [:hallway 0]]
+                                                   [:A0 [:room :B 0]]]})
+                       :A0
+                       [:hallway 0])]
       (is (= false valid-move?))))
   (testing "can-move? (not back and forth in the hallway)"
     (let [valid-move? (core/can-move?
-                        (core/assoc-burrow {:accumulated-cost 0, :moves [[:A0 [:hallway 0]]]})
-                        :A0
-                        [:hallway 3])]
+                       (core/assoc-burrow {:accumulated-cost 0
+                                           :moves [[:A0 [:hallway 0]]]})
+                       :A0
+                       [:hallway 3])]
       (is (= false valid-move?)))
     (let [valid-move? (core/can-move?
-                        (core/assoc-burrow {:accumulated-cost 0, :moves [[:A0 [:room :B 0]]]})
-                        :A0
-                        [:hallway 0])]
+                       (core/assoc-burrow {:accumulated-cost 0
+                                           :moves [[:A0 [:room :B 0]]]})
+                       :A0
+                       [:hallway 0])]
       (is (= true valid-move?))))
   (testing "can-move? (not when already home)"
     (let [valid-move? (core/can-move?
-                        (core/assoc-burrow {:accumulated-cost 0, :moves [[:A0 [:room :A 0]]]})
-                        :A0
-                        [:hallway 0])]
+                       (core/assoc-burrow {:accumulated-cost 0
+                                           :moves [[:A0 [:room :A 0]]]})
+                       :A0
+                       [:hallway 0])]
       (is (= false valid-move?)))
     (let [valid-move? (core/can-move?
-                        (core/assoc-burrow {:accumulated-cost 0, :moves [[:A1 [:room :A 0]], [:A0 [:room :A 1]]]})
-                        :A0
-                        [:hallway 0])]
+                       (core/assoc-burrow {:accumulated-cost 0
+                                           :moves [[:A1 [:room :A 0]]
+                                                   [:A0 [:room :A 1]]]})
+                       :A0
+                       [:hallway 0])]
       (is (= false valid-move?)))
     (let [valid-move? (core/can-move?
-                        (core/assoc-burrow {:accumulated-cost 0, :moves [[:B0 [:room :A 0]], [:A0 [:room :A 1]]]})
-                        :A0
-                        [:hallway 0])]
+                       (core/assoc-burrow {:accumulated-cost 0
+                                           :moves [[:B0 [:room :A 0]]
+                                                   [:A0 [:room :A 1]]]})
+                       :A0
+                       [:hallway 0])]
       (is (= true valid-move?))))
   (testing "can-move? (not in front of own base)"
     (let [valid-move? (core/can-move?
-                        (core/assoc-burrow {:accumulated-cost 0, :moves [[:B0 [:room :A 0]], [:A0 [:room :A 1]]]})
-                        :A0
-                        [:hallway 2])]
+                       (core/assoc-burrow {:accumulated-cost 0
+                                           :moves [[:B0 [:room :A 0]]
+                                                   [:A0 [:room :A 1]]]})
+                       :A0
+                       [:hallway 2])]
       (is (= false valid-move?))))
   (testing "can-move? (not when blocked)"
     (let [valid-move? (core/can-move?
-                        (core/assoc-burrow {:accumulated-cost 0, :moves [[:B0 [:hallway 6]], [:A0 [:room :B 0]]]})
-                        :A0
-                        [:room :D 0])]
+                       (core/assoc-burrow {:accumulated-cost 0
+                                           :moves [[:B0 [:hallway 6]]
+                                                   [:A0 [:room :B 0]]]})
+                       :A0
+                       [:room :D 0])]
       (is (= false valid-move?))))
   (testing "can-move? (not into non-home burrow)"
     (let [valid-move? (core/can-move?
-                        (core/assoc-burrow {:accumulated-cost 0, :moves [[:A0 [:hallway 0]]]})
-                        :A0
-                        [:room :D 0])]
+                       (core/assoc-burrow {:accumulated-cost 0
+                                           :moves [[:A0 [:hallway 0]]]})
+                       :A0
+                       [:room :D 0])]
       (is (= false valid-move?))))
-  (testing "can-move? (not into home burrow, if currently occupied by different amphipod)"
+  (testing
+    "can-move? (not into home burrow, if currently occupied by different amphipod)"
     (let [valid-move? (core/can-move?
-                        (core/assoc-burrow {:accumulated-cost 0, :moves [[:B0 [:room :A 0]] [:A0 [:hallway 0]]]})
-                        :A0
-                        [:room :A 1])]
+                       (core/assoc-burrow {:accumulated-cost 0
+                                           :moves [[:B0 [:room :A 0]]
+                                                   [:A0 [:hallway 0]]]})
+                       :A0
+                       [:room :A 1])]
       (is (= false valid-move?))))
   (testing "can-move? (not into home burrow, if bottom positions are free)"
     (let [valid-move? (core/can-move?
-                        (core/assoc-burrow {:accumulated-cost 0, :moves [[:A0 [:hallway 0]]]})
-                        :A0
-                        [:room :A 1])]
+                       (core/assoc-burrow {:accumulated-cost 0
+                                           :moves [[:A0 [:hallway 0]]]})
+                       :A0
+                       [:room :A 1])]
       (is (= false valid-move?))))
   (testing "can-move? (not in front of own base, tiny)"
     (binding [core/rooms (take 2 core/rooms)]
       (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
       (let [valid-move? (core/can-move?
-                          (core/assoc-burrow {:accumulated-cost 0, :moves [[:B0 [:room :A 0]], [:A0 [:room :A 1]]]})
-                          :A0
-                          [:hallway 2])]
+                         (core/assoc-burrow {:accumulated-cost 0
+                                             :moves [[:B0 [:room :A 0]]
+                                                     [:A0 [:room :A 1]]]})
+                         :A0
+                         [:hallway 2])]
         (is (= false valid-move?))))
     (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)))
 
 (deftest move-applied-test
   (testing "move-applied"
     (let [{:keys [moves accumulated-cost]} (core/move-applied journey-start
-                                                              [:B1 [:hallway 3]])]
+                                                              [:B1
+                                                               [:hallway 3]])]
       (is (= 40 accumulated-cost))
       (is (= [:B1 [:hallway 3]] (last moves))))))
 
@@ -197,20 +224,23 @@
 (deftest str->burrow-test
   (testing "str->burrow"
     (is (= {:hallway [nil nil nil nil nil nil nil nil nil nil nil]
-            :room {:A [:A0 :B0], :B [:D1 :C0], :C [:C1 :B1], :D [:A1 :D0]}}
+            :room    {:A [:A0 :B0] :B [:D1 :C0] :C [:C1 :B1] :D [:A1 :D0]}}
            (core/str->burrow puzzle))))
   (binding [core/rooms (take 2 core/rooms)]
     (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
     (testing "str->burrow, tiny"
       (is (= {:hallway [nil nil nil nil nil nil nil]
-              :room {:A [:A1 :B0], :B [:B1 :A0]}}
+              :room    {:A [:A1 :B0] :B [:B1 :A0]}}
              (core/str->burrow puzzle-tiny)))))
   (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
   (binding [core/room-size 4]
     (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
     (testing "str->burrow, large"
       (is (= {:hallway [nil nil nil nil nil nil nil nil nil nil nil]
-              :room {:A [:A2 :D2 :D1 :B0], :B [:D3 :B3 :C1 :C0], :C [:C3 :A1 :B2 :B1], :D [:A3 :C2 :A0 :D0]}}
+              :room    {:A [:A2 :D2 :D1 :B0]
+                        :B [:D3 :B3 :C1 :C0]
+                        :C [:C3 :A1 :B2 :B1]
+                        :D [:A3 :C2 :A0 :D0]}}
              (core/str->burrow puzzle-large)))))
   (require 'adventoc.twentytwentyone.twentythree.amphipod :reload))
 
@@ -222,67 +252,116 @@
     (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
     (testing "burrow->str, tiny"
       (is (= puzzle-tiny
-            (core/burrow->str (core/str->burrow puzzle-tiny))))))
+             (core/burrow->str (core/str->burrow puzzle-tiny))))))
   (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
   (binding [core/room-size 4]
     (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
     (testing "burrow->str, large"
       (is (= puzzle-large
-            (core/burrow->str (core/str->burrow puzzle-large))))))
+             (core/burrow->str (core/str->burrow puzzle-large))))))
   (require 'adventoc.twentytwentyone.twentythree.amphipod :reload))
 
 (deftest journey-start-test
   (testing "journey-start"
-    (is (= {:accumulated-cost 0, :seen #{}, :burrow {:hallway [nil nil nil nil nil nil nil nil nil nil nil], :room {:A [:A0 :B0], :B [:D1 :C0], :C [:C1 :B1], :D [:A1 :D0]}}, :moves [[:A0 [:room :A 0]] [:B0 [:room :A 1]] [:D1 [:room :B 0]] [:C0 [:room :B 1]] [:C1 [:room :C 0]] [:B1 [:room :C 1]] [:A1 [:room :D 0]] [:D0 [:room :D 1]]], :cost [0 0 0 0 0 0 0 0]}
+    (is (= {:accumulated-cost 0
+            :seen   #{}
+            :burrow {:hallway [nil nil nil nil nil nil nil nil nil nil nil]
+                     :room    {:A [:A0 :B0]
+                               :B [:D1 :C0]
+                               :C [:C1 :B1]
+                               :D [:A1 :D0]}}
+            :moves  [[:A0 [:room :A 0]] [:B0 [:room :A 1]] [:D1 [:room :B 0]]
+                     [:C0 [:room :B 1]] [:C1 [:room :C 0]] [:B1 [:room :C 1]]
+                     [:A1 [:room :D 0]] [:D0 [:room :D 1]]]
+            :cost   [0 0 0 0 0 0 0 0]}
            (core/journey-start (core/journey->burrow journey-start))))
     (is (= puzzle
-           (core/burrow->str (core/journey->burrow (core/journey-start (core/journey->burrow (core/journey-start (core/str->burrow puzzle)))))))))
+           (core/burrow->str (core/journey->burrow (core/journey-start
+                                                    (core/journey->burrow
+                                                     (core/journey-start
+                                                      (core/str->burrow
+                                                       puzzle)))))))))
   (binding [core/room-size 4]
     (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
     (testing "journey-start, large"
-      (is (= {:accumulated-cost 0, :seen #{}, :burrow {:hallway [nil nil nil nil nil nil nil nil nil nil nil], :room {:A [:A2 :D2 :D1 :B0], :B [:D3 :B3 :C1 :C0], :C [:C3 :A1 :B2 :B1], :D [:A3 :C2 :A0 :D0]}}, :moves [[:A2 [:room :A 0]] [:D2 [:room :A 1]] [:D1 [:room :A 2]] [:B0 [:room :A 3]] [:D3 [:room :B 0]] [:B3 [:room :B 1]] [:C1 [:room :B 2]] [:C0 [:room :B 3]] [:C3 [:room :C 0]] [:A1 [:room :C 1]] [:B2 [:room :C 2]] [:B1 [:room :C 3]] [:A3 [:room :D 0]] [:C2 [:room :D 1]] [:A0 [:room :D 2]] [:D0 [:room :D 3]]], :cost [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]}
-             (core/journey-start (core/journey->burrow (core/journey-start (core/str->burrow puzzle-large))))))
+      (is
+       (= {:accumulated-cost 0
+           :seen   #{}
+           :burrow {:hallway [nil nil nil nil nil nil nil nil nil nil nil]
+                    :room    {:A [:A2 :D2 :D1 :B0]
+                              :B [:D3 :B3 :C1 :C0]
+                              :C [:C3 :A1 :B2 :B1]
+                              :D [:A3 :C2 :A0 :D0]}}
+           :moves  [[:A2 [:room :A 0]] [:D2 [:room :A 1]] [:D1 [:room :A 2]]
+                    [:B0 [:room :A 3]] [:D3 [:room :B 0]] [:B3 [:room :B 1]]
+                    [:C1 [:room :B 2]] [:C0 [:room :B 3]] [:C3 [:room :C 0]]
+                    [:A1 [:room :C 1]] [:B2 [:room :C 2]] [:B1 [:room :C 3]]
+                    [:A3 [:room :D 0]] [:C2 [:room :D 1]] [:A0 [:room :D 2]]
+                    [:D0 [:room :D 3]]]
+           :cost   [0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]}
+          (core/journey-start (core/journey->burrow (core/journey-start
+                                                     (core/str->burrow
+                                                      puzzle-large))))))
       (is (= puzzle-large
-             (core/burrow->str (core/journey->burrow (core/journey-start (core/journey->burrow (core/journey-start (core/str->burrow puzzle-large))))))))))
+             (core/burrow->str (core/journey->burrow (core/journey-start
+                                                      (core/journey->burrow
+                                                       (core/journey-start
+                                                        (core/str->burrow
+                                                         puzzle-large))))))))))
   (require 'adventoc.twentytwentyone.twentythree.amphipod :reload))
 
 (deftest goal-test
   (testing "goal"
-    (let [goal (core/goal (-> puzzle core/str->burrow core/journey-start))]
+    (let [goal (core/goal (-> puzzle
+                              core/str->burrow
+                              core/journey-start))]
       (is (= false (boolean goal))))
-    (let [puzzle-solved (string/join "\n" ["#############"
-                                           "#...........#"
-                                           "###A#B#C#D###"
-                                           "  #A#B#C#D#"
-                                           "  #########"])
-          goal (core/goal (-> puzzle-solved core/str->burrow core/journey-start))]
+    (let [puzzle-solved (string/join "\n"
+                                     ["#############"
+                                      "#...........#"
+                                      "###A#B#C#D###"
+                                      "  #A#B#C#D#"
+                                      "  #########"])
+          goal (core/goal (-> puzzle-solved
+                              core/str->burrow
+                              core/journey-start))]
       (is (= true (boolean goal)))))
   (binding [core/rooms (take 2 core/rooms)]
     (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
     (testing "goal (smaller burrow)"
-      (let [goal (core/goal (-> puzzle-tiny core/str->burrow core/journey-start))]
+      (let [goal (core/goal (-> puzzle-tiny
+                                core/str->burrow
+                                core/journey-start))]
         (is (= false (boolean goal))))
-      (let [puzzle-solved (string/join "\n" ["#############"
-                                             "#...........#"
-                                             "###A#B#.#.###"
-                                             "  #A#B#.#.#"
-                                             "  #########"])
-            goal (core/goal (-> puzzle-solved core/str->burrow core/journey-start))]
+      (let [puzzle-solved (string/join "\n"
+                                       ["#############"
+                                        "#...........#"
+                                        "###A#B#.#.###"
+                                        "  #A#B#.#.#"
+                                        "  #########"])
+            goal (core/goal (-> puzzle-solved
+                                core/str->burrow
+                                core/journey-start))]
         (is (= true (boolean goal))))))
   (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
   (binding [core/room-size 4]
     (require 'adventoc.twentytwentyone.twentythree.amphipod :reload)
     (testing "goal (large burrow)"
-      (let [goal (core/goal (-> puzzle-tiny core/str->burrow core/journey-start))]
+      (let [goal (core/goal (-> puzzle-tiny
+                                core/str->burrow
+                                core/journey-start))]
         (is (= false (boolean goal))))
-      (let [puzzle-solved (string/join "\n" ["#############"
-                                             "#...........#"
-                                             "###A#B#C#D###"
-                                             "  #A#B#C#D#"
-                                             "  #A#B#C#D#"
-                                             "  #A#B#C#D#"
-                                             "  #########"])
-            goal (core/goal (-> puzzle-solved core/str->burrow core/journey-start))]
+      (let [puzzle-solved (string/join "\n"
+                                       ["#############"
+                                        "#...........#"
+                                        "###A#B#C#D###"
+                                        "  #A#B#C#D#"
+                                        "  #A#B#C#D#"
+                                        "  #A#B#C#D#"
+                                        "  #########"])
+            goal (core/goal (-> puzzle-solved
+                                core/str->burrow
+                                core/journey-start))]
         (is (= true (boolean goal))))))
   (require 'adventoc.twentytwentyone.twentythree.amphipod :reload))
 

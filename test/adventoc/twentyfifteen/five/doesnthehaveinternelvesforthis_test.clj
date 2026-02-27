@@ -1,7 +1,7 @@
 (ns adventoc.twentyfifteen.five.doesnthehaveinternelvesforthis-test
   (:require
-   [adventoc.twentyfifteen.five.doesnthehaveinternelvesforthis :as core]
-   [clojure.test :refer :all]))
+    [adventoc.twentyfifteen.five.doesnthehaveinternelvesforthis :as core]
+    [clojure.test :refer :all]))
 
 (deftest is-nice-test
   (testing "is-nice?"

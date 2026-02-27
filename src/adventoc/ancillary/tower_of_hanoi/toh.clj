@@ -1,11 +1,12 @@
 (ns adventoc.ancillary.tower-of-hanoi.toh
   (:require
-   [dev.nu.morse :as morse]))
+    [dev.nu.morse :as morse]))
 
-(defn towers [disks towers]
-  (let [tower-zero (vec (range (dec disks) -1 -1))
+(defn towers
+  [disks towers]
+  (let [tower-zero  (vec (range (dec disks) -1 -1))
         empty-tower []
-        initial (vec (cons tower-zero (repeat (dec towers) empty-tower)))]
+        initial     (vec (cons tower-zero (repeat (dec towers) empty-tower)))]
     initial))
 
 ;; (defn toh-moves
@@ -29,30 +30,36 @@
      (if (zero? n)
        []
        (concat
-         (toh-moves (dec n) from aux to (inc depth))
-         [[from to]]
-         (toh-moves (dec n) aux to from (inc depth)))))))
+        (toh-moves (dec n) from aux to (inc depth))
+        [[from to]]
+        (toh-moves (dec n) aux to from (inc depth)))))))
 
-(defn apply-move [state [from to]]
+(defn apply-move
+  [state [from to]]
   (let [disk (peek (state from))]
     (-> state
         (assoc from (pop (state from)))
-        (assoc to   (conj (state to) disk)))))
+        (assoc to (conj (state to) disk)))))
 
-(defn toh [number-of-disks, number-of-towers]
+(defn toh
+  [number-of-disks number-of-towers]
   (let [state (towers number-of-disks number-of-towers)]
     (reduce apply-move state (toh-moves number-of-disks 0 2 1))))
 
-(defn -main [& _]
-;;   (println (toh 4 3)))
-;;   (println (toh-moves 3 0 2 1)))
-;;   (println (toh 3 3)))
+(defn -main
+  [& _]
+  ;;   (println (toh 4 3)))
+  ;;   (println (toh-moves 3 0 2 1)))
+  ;;   (println (toh 3 3)))
   (println (toh-moves 2 0 2 1)))
 
-(comment (morse/launch-in-proc))
-(comment (-main))
+(comment
+  (morse/launch-in-proc))
+(comment
+  (-main))
 
-(comment (toh-moves 4 0 2 1))
+(comment
+  (toh-moves 4 0 2 1))
 
 ;; https://www.reddit.com/r/learnprogramming/comments/lywzqh/at_what_point_of_learning_programming_am_i/
     ;; void f(int[] bar1, int[] bar2, int[] bar3, int n)

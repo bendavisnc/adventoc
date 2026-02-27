@@ -1,8 +1,8 @@
 (ns adventoc.twentytwentyfive.four.printingdepartment
   (:require
-   [adventoc.helpers :refer [input]]
-   [clojure.java.io :as io]
-   [clojure.string :as string]))
+    [adventoc.helpers :refer [input]]
+    [clojure.java.io :as io]
+    [clojure.string :as string]))
 
 (def paperroll \@)
 
@@ -10,24 +10,28 @@
 
 (def adjacency-limit 3)
 
-(defn occupied? [grid, [x, y]]
-  (boolean (#{paperroll} (get-in grid [y, x]))))
+(defn occupied?
+  [grid [x y]]
+  (boolean (#{paperroll} (get-in grid [y x]))))
 
-(defn adjacencies [[x y], [max-x, max-y]]
+(defn adjacencies
+  [[x y] [max-x max-y]]
   (let [deltas [-1 0 1]]
     (mapcat
-      (fn [dx]
-        (mapcat
-          (fn [dy]
-            (let [cx (+ x dx)
-                  cy (+ y dy)]
-              (if (and (not (and (= dx 0) (= dy 0)))
-                       (>= cx 0) (< cx max-x)
-                       (>= cy 0) (< cy max-y))
-                [[cx cy]]
-                [])))
-          deltas))
-      deltas)))
+     (fn [dx]
+       (mapcat
+        (fn [dy]
+          (let [cx (+ x dx)
+                cy (+ y dy)]
+            (if (and (not (and (= dx 0) (= dy 0)))
+                     (>= cx 0)
+                     (< cx max-x)
+                     (>= cy 0)
+                     (< cy max-y))
+              [[cx cy]]
+              [])))
+        deltas))
+     deltas)))
 
 ;; (defn increment-adjacents [counts, [x, y], [x-max, y-max]]
 ;;   (reduce (fn [acc, [x', y']]
@@ -35,37 +39,42 @@
 ;;           counts
 ;;           (adjacencies [x, y], [x-max, y-max])))
 
-(defn all-coords [[max-x, max-y]]
+(defn all-coords
+  [[max-x max-y]]
   (mapcat (fn [x]
             (map (fn [y]
-                   [x, y])
+                   [x y])
                  (range max-y)))
-          (range max-x)))
+   (range max-x)))
 
-(defn size [grid]
+(defn size
+  [grid]
   (if-let [row (first grid)]
     [(count row) (count grid)]
     (throw (ex-info "Empty grid" {:grid grid}))))
 
-(defn adjacency-counts [grid]
-  (let [bounds (size grid)
-        adjacents (mapcat (fn [[x, y]]
-                            (adjacencies [x, y], bounds))
-                          (filter (partial occupied? grid)
-                                  (all-coords bounds)))
-        freqs (frequencies adjacents)]
-    (reduce (fn [acc [[x y], count]]
-              (assoc-in acc [x, y] count))
+(defn adjacency-counts
+  [grid]
+  (let [bounds    (size grid)
+        adjacents (mapcat (fn [[x y]]
+                            (adjacencies [x y] bounds))
+                   (filter (partial occupied? grid)
+                           (all-coords bounds)))
+        freqs     (frequencies adjacents)]
+    (reduce (fn [acc [[x y] count]]
+              (assoc-in acc [x y] count))
             {}
             freqs)))
 
-(defn input->grid [input]
+(defn input->grid
+  [input]
   (vec (for [row (vec (string/split-lines input))]
          (vec row))))
 
-(defn counts-no-more-than [grid, counts, n]
-  (reduce (fn [acc, [x, y]]
-            (let [adjacency-count (or (get-in counts [x, y])
+(defn counts-no-more-than
+  [grid counts n]
+  (reduce (fn [acc [x y]]
+            (let [adjacency-count (or (get-in counts [x y])
                                       0)]
               (if (<= adjacency-count n)
                 (inc acc)
@@ -74,51 +83,58 @@
           (filter (partial occupied? grid)
                   (all-coords (size grid)))))
 
-(defn grid-next [grid, counts, n]
-  (vec (map-indexed (fn [y, row]
-                      (vec (map-indexed (fn [x, cell]
+(defn grid-next
+  [grid counts n]
+  (vec (map-indexed (fn [y row]
+                      (vec (map-indexed (fn [x cell]
                                           (cond (= paperroll-absent cell)
                                                 paperroll-absent
-                                                (<= (or (get-in counts [x, y])
+                                                (<= (or (get-in counts [x y])
                                                         0)
                                                     n)
                                                 paperroll-absent
                                                 :else
                                                 paperroll))
-                             row)))
-         grid)))
+                                        row)))
+                    grid)))
 
-(defn counts-no-more-than-continuous [grid n]
+(defn counts-no-more-than-continuous
+  [grid n]
   (some (fn [[_ removed acc]]
-            (when (some-> removed zero?)
-              acc))
+          (when (some-> removed
+                        zero?)
+            acc))
         (iterate
-          (fn [[g _ acc]]
-            (let [counts (adjacency-counts g)
-                  removed (counts-no-more-than g counts n)]
-              [(grid-next g counts n) removed (+ acc removed)]))
-          [grid nil 0])))
+         (fn [[g _ acc]]
+           (let [counts  (adjacency-counts g)
+                 removed (counts-no-more-than g counts n)]
+             [(grid-next g counts n) removed (+ acc removed)]))
+         [grid nil 0])))
 
 (defn printingdepartment
-  ([input, {:keys [continuous-removal?]}]
+  ([input {:keys [continuous-removal?]}]
    (time
-     (println
-       (let [grid (input->grid input)]
-         (if continuous-removal?
-           (counts-no-more-than-continuous grid adjacency-limit)
-           ;; else
-           (let [counts (adjacency-counts grid)
-                 significant-adjacents-count (counts-no-more-than grid counts adjacency-limit)]
-             significant-adjacents-count))))))
+    (println
+     (let [grid (input->grid input)]
+       (if continuous-removal?
+         (counts-no-more-than-continuous grid adjacency-limit)
+         ;; else
+         (let [counts (adjacency-counts grid)
+               significant-adjacents-count
+               (counts-no-more-than grid counts adjacency-limit)]
+           significant-adjacents-count))))))
   ([input]
    (printingdepartment input {})))
 
-(defn -main [& args]
+(defn -main
+  [& args]
   (if (= ["--continuous"] args)
     (printingdepartment (input) {:continuous-removal? true})
     (printingdepartment (input))))
 
-(comment (printingdepartment "..@@.@@@@.
+(comment
+  (printingdepartment
+   "..@@.@@@@.
 @@@.@.@.@@
 @@@@@.@.@@
 @.@@@@..@.
@@ -127,4 +143,5 @@
 .@.@.@.@@@
 @.@@@.@@@@
 .@@@@@@@@.
-@.@.@@@.@." {:continuous-removal? true}))
+@.@.@@@.@."
+   {:continuous-removal? true}))
