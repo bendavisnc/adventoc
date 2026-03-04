@@ -18,10 +18,14 @@ test: check-main format
 	clj -M:test cognitect.test-runner -n $(MAIN)-test
 
 run: check-main format
-	clj -M -m $(MAIN) $(ARGS)
+	clj -M -m $(MAIN) "$(ARGS)"
 
 autorun:
 	find . -iname '*.clj' | entr env MAIN=$(MAIN) ARGS="$(ARGS)" make run
+
+autoformat:
+	find . -iname '*.clj' | entr make format
+
 
 format:
 	@echo "Formatting Clojure for $$MAIN with zprint..."
@@ -33,7 +37,7 @@ format:
 	if [ -n "$$DIRS" ]; then \
 	  echo "Formatting files under: $$DIRS"; \
 	  find $$DIRS \( -iname "*.clj" \) -print0 \
-	    | xargs -0 zprint '{:style [:community :respect-nl :justified] }' -w; \
+	    | xargs -0 zprint '{:style [:community :respect-nl :justified]}' -w; \
 	else \
 	  echo "No matching src/test paths for $$MAIN"; \
 	fi
