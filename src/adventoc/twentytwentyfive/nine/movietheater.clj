@@ -42,7 +42,7 @@
 
 (defn coords-by-area
   "Returns a list of vectors of size 2 where the first item is 2 coordinates that represent a rectangle's diagonal and the second item represents the corresponding area. 
-   Returned area is sorted by area, descending."
+   Returned sorted by area, descending."
   [coords coord-combos uncompress]
   (->> (for [[idx-a idx-b] coord-combos
              :let          [[x1 y1] (nth coords idx-a)
@@ -150,7 +150,6 @@
     (loop [grid' grid
            x     0
            y     0]
-      ;; (prn [:waaat x y (is-tile? [x y])])
       (if (and (>= x grid-width)
                (>= y grid-height))
         (insert grid' [x y])
@@ -181,17 +180,18 @@
          is-red-or-green-tile? (coords->connected-set coords)
          is-outside-tile? (->outside-set max-x max-y is-red-or-green-tile?)
          coord-combos (all-coord-combos (count coords))
-         coords-by-area' (coords-by-area coords coord-combos uncompress)
+         coords-and-areas (coords-by-area coords coord-combos uncompress)
          [found-pair-compressed found-area]
-         (some (fn [[coord-pair pair-area]]
-                 (when (every?
-                        (fn [corner-coord]
-                          (or (not (true? respect-boundary?))
-                              (not (is-outside-tile? corner-coord))))
-                        (coords->connected-set
-                         (apply all-corners coord-pair)))
-                   [coord-pair pair-area]))
-               coords-by-area')
+         (if respect-boundary?
+           (some (fn [[coord-pair pair-area]]
+                   (when (every?
+                          (fn [coord]
+                            (not (is-outside-tile? coord)))
+                          (coords->connected-set
+                           (apply all-corners coord-pair)))
+                     [coord-pair pair-area]))
+                 coords-and-areas)
+           (first coords-and-areas))
          found-pair (map uncompress found-pair-compressed)
          grid (empty-grid {:width max-x :height max-y})
          is-chosen-tile? (set (coords->connected-set
