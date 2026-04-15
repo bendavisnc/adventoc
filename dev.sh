@@ -13,7 +13,7 @@
 # make MAIN=adventoc.twentytwentyfive.seven.laboratories ARGS="--quantum" autorun
 # make MAIN=adventoc.twentytwentyfive.eight.playground ARGS="--connection-count=10" autorun
 # make MAIN=adventoc.twentytwentyfive.eight.playground ARGS="--connect-all" autorun
-make MAIN=adventoc.twentytwentyfive.nine.movietheater ARGS="--respect-boundary --skip-grid-print --compress" autorun
+# make MAIN=adventoc.twentytwentyfive.nine.movietheater ARGS="--respect-boundary --skip-grid-print --compress" autorun
 # make MAIN=adventoc.twentytwentyfive.nine.movietheater ARGS="--compress" autorun
 # make MAIN=adventoc.twentytwentyfive.nine.movietheater ARGS="--respect-boundary" autorun
 # make MAIN=adventoc.twentytwentyfive.nine.movietheater ARGS="" autorun
@@ -23,3 +23,4 @@ make MAIN=adventoc.twentytwentyfive.nine.movietheater ARGS="--respect-boundary -
 # make MAIN=adventoc.twentytwentyfive.four.printingdepartment ARGS="--continuous" autorun 
 # make MAIN=adventoc.twentytwentyone.twentythree.amphipod 
 # make MAIN=adventoc.twentytwentyone.fifteen.chiton
+make MAIN=adventoc.twentytwentyfive.ten.factory autorun

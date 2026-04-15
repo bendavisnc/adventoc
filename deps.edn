@@ -1,5 +1,6 @@
 {:deps {shams/priority-queue {:mvn/version "0.1.2"}
-        meander/epsilon {:mvn/version "0.0.650"}}
+        meander/epsilon {:mvn/version "0.0.650"}
+        org.clojure/math.combinatorics {:mvn/version "0.3.2"}}
  :paths ["src", "resources"]
  :aliases {:dev {:jvm-opts ["-Djdk.attach.allowAttachSelf=true"]
                  :extra-deps {io.github.clojure/data.alpha.replicant-server {:git/tag "v2023.05.02.01" :git/sha "947d8a8"}
