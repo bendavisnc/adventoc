@@ -9,5 +9,6 @@
            :test
            {:extra-paths ["test"]
             :extra-deps {io.github.cognitect-labs/test-runner
-                         {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
+                         {:git/tag "v0.5.1" :git/sha "dfb30dd"}
+                         orchestra/orchestra {:mvn/version "2021.01.01-1"}}
             :main-opts ["-m" "cognitect.test-runner" "-d" "test"]}}}

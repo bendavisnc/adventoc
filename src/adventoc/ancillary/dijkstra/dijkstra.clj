@@ -5,23 +5,37 @@
 
 ;; https://www.w3schools.com/dsa/trydsa.php?filename=demo_graphs_dijkstra
 (defn dijkstra
+  ;; Returns a mapping of end node key -> shortest distance from `start`
+  ;; node. `graph` is a map where each key is a node and each value is a
+  ;; map of neighbor nodes and their distances.
   [graph start]
-  (let [inf      ##Inf
-        vertices (keys graph)]
-    (loop [dist    (-> (into (sorted-map) (map vector vertices (repeat inf)))
+  (let [vertices (mapcat (fn [[k v]]
+                           (concat [k] (keys v)))
+                  graph)]
+    (loop [;; mapping of node keys to distances. all nodes start with a
+           ;; distance of infinity except the start node which starts at
+           ;; zero.
+           dist    (-> (into {} (map vector vertices (repeat ##Inf)))
                        (assoc start 0))
            visited #{}]
       (if (= visited (set vertices))
         dist
-        (let [u         (apply min-key dist (remove visited vertices))
+        (let [;; which key in the distances map has the lowest distance and
+              ;; is unvisited
+              u         (apply min-key dist (remove visited vertices))
               neighbors (graph u)
+              ;; look at each neighbor of `u`, and if `u`'s distance from
+              ;; `start` plus the distance between the neighbor and `u` is
+              ;; less than whatever distance already found from `start` to
+              ;; neighbor - update to new shorter distance.
               dist'     (reduce-kv (fn [d v w]
                                      (let [alt (+ (dist u) w)]
-                                       (if (< alt (get d v inf))
+                                       (if (< alt (d v))
                                          (assoc d v alt)
                                          d)))
                                    dist
                                    neighbors)]
+
           (recur dist' (conj visited u)))))))
 
 ;; https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm#Using_a_priority_queue
@@ -46,9 +60,10 @@
 ;; 19      return dist[], prev[]
 (defn dijkstra-q
   [graph start]
-  (let [inf       ##Inf
-        vertices  (keys graph)
-        distances (-> (into (sorted-map) (map vector vertices (repeat inf)))
+  (let [vertices  (mapcat (fn [[k v]]
+                            (concat [k] (keys v)))
+                   graph)
+        distances (-> (into {} (map vector vertices (repeat ##Inf)))
                       (assoc start 0))
         q         (-> (pq/priority-queue (comp (fn [x]
                                                  (some-> x
@@ -69,8 +84,9 @@
                   [distances' q'] (reduce-kv
                                    (fn [[d q] v w]
                                      (let [alt (+ (distances u) w)]
-                                       (if (< alt (get d v inf))
-                                         [(assoc d v alt) (conj q [v alt])]
+                                       (if (< alt (d v))
+                                         [(assoc d v alt)
+                                          (conj q [v alt])]
                                          [d q])))
                                    [distances q]
                                    neighbors)]

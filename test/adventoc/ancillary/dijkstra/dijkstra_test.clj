@@ -1,7 +1,31 @@
 (ns adventoc.ancillary.dijkstra.dijkstra-test
   (:require
     [adventoc.ancillary.dijkstra.dijkstra :as core]
-    [clojure.test :refer :all]))
+    [clojure.test :refer :all]
+    [orchestra.spec.test :as st]
+    [clojure.spec.alpha :as spec]))
+
+(spec/def ::core/node keyword?)
+;; (spec/def ::core/node boolean?)
+
+(spec/def ::core/start ::core/node)
+
+(spec/def ::core/node-distances (spec/map-of ::core/node int?))
+
+(spec/fdef core/dijkstra
+ :args
+ (spec/cat :graph (spec/map-of ::core/start ::core/node-distances)
+           :start keyword?)
+ :ret ::core/node-distances)
+
+(spec/fdef core/dijkstra-q
+ :args
+ (spec/cat :graph (spec/map-of ::core/start ::core/node-distances)
+           :start keyword?)
+ :ret ::core/node-distances)
+
+
+(st/instrument)
 
 (def graph
   {:d {:a 4 :e 2}
@@ -12,9 +36,8 @@
    :g {:f 5}})
 
 (deftest dijkstra-test
-  (testing "dijkstra"
-    (is (= [4 8 6 0 2 10 7]
-           (vals (time (core/dijkstra graph :d))))))
-  (testing "dijkstra-q"
-    (is (= [4 8 6 0 2 10 7]
-           (vals (time (core/dijkstra-q graph :d)))))))
+  (are [dijkstra]
+   (is (= (dijkstra graph :d)
+          {:a 4 :b 8 :c 6 :d 0 :e 2 :f 10 :g 7}))
+   core/dijkstra
+   core/dijkstra-q))
