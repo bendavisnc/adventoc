@@ -1,0 +1,1 @@
+make MAIN=adventoc.twentytwentyfive.ten.factory autoformat

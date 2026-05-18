@@ -23,4 +23,5 @@
 # make MAIN=adventoc.twentytwentyfive.four.printingdepartment ARGS="--continuous" autorun 
 # make MAIN=adventoc.twentytwentyone.twentythree.amphipod 
 # make MAIN=adventoc.twentytwentyone.fifteen.chiton
-make MAIN=adventoc.twentytwentyfive.ten.factory autorun
+# make MAIN=adventoc.twentytwentyfive.ten.factory ARGS="--lights" autorun
+make MAIN=adventoc.twentytwentyfive.ten.factory ARGS="--joltages" autorun

@@ -15,10 +15,10 @@ autotest:
 	find . -iname '*.clj' | entr make test
 
 test: check-main format
-	clj -M:test cognitect.test-runner -n $(MAIN)-test
+	clj -M:dev:test cognitect.test-runner -n $(MAIN)-test
 
 run: check-main format
-	clj -M -m $(MAIN) "$(ARGS)"
+	clj -M:dev -m $(MAIN) "$(ARGS)"
 
 autorun:
 	find . -iname '*.clj' | entr env MAIN=$(MAIN) ARGS="$(ARGS)" make run
