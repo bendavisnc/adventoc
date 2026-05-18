@@ -5,6 +5,8 @@
     [clojure.math.combinatorics :as combo]
     [clojure.string :as string]))
 
+;; taken and adapted from - https://www.reddit.com/r/adventofcode/comments/1pk87hl/comment/ntp4njq/
+
 (defn input->machines
   [input]
   (for [line (string/split-lines input)]
@@ -45,6 +47,9 @@
      (range (inc buttons-count)))))
 
 
+;; dynamic programming solution 
+;; f(fewest button presses to joltages target) = number of button presses to target parity + 2 * f(fewest button pressees to joltages target subtraced and halved)
+;; curious note, i didn't observe any performance in memoizing this implementation or the python one that this is based on.
 (defn least-button-presses-joltages'
   [costs joltages-target]
   (if (= (set [0])
